@@ -759,6 +759,42 @@ app.get("/api/reviewer/orders", requireReviewer, async (req, res) => {
 });
 
 app.patch("/api/reviewer/orders/:id", requireReviewer, async (req, res) => {
+app.delete("/api/reviewer/orders/:id", requireReviewer, async (req, res) => {
+  if (!req.access.isAdmin) {
+    return res.status(403).json({
+      success: false,
+      error: "Tylko administrator może usuwać zamówienia."
+    });
+  }
+
+  try {
+    const order = await getOrderById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        error: "Nie znaleziono zamówienia."
+      });
+    }
+
+    await pool.query(
+      "DELETE FROM orders WHERE id = $1",
+      [req.params.id]
+    );
+
+    res.json({
+      success: true,
+      deletedId: req.params.id
+    });
+  } catch (err) {
+    console.error("DELETE ORDER:", err);
+
+    res.status(500).json({
+      success: false,
+      error: "Nie udało się usunąć zamówienia."
+    });
+  }
+});
   if (!req.access.isAdmin) {
     return res.status(403).json({
       success: false,
