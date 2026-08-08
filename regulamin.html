@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+
     <!-- Meta Tags for Embeds -->
     <meta property="og:title" content="Oficjalna Strona Side Roleplay">
     <meta property="og:description" content="Dołącz do SideRP! Twoja nowa historia zaczyna się tutaj.">
@@ -17,6 +18,7 @@
     <meta name="theme-color" content="#5dc1f9">
 </head>
 <body>
+
 <!-- PRELOADER -->
 <div id="preloader">
     <div class="loader-glitch" data-text="SideRP">Side<span>RP</span></div>
@@ -42,7 +44,7 @@
             <li id="nav-login"><a href="/auth/login" class="nav-discord"><i class="fa-brands fa-discord"></i> Zaloguj</a></li>
             <li id="nav-panel" style="display:none"><a href="javascript:void(0)" onclick="openPlayerPanel()" class="btn-panel"><i class="fa-solid fa-user-gear"></i> Panel Gracza</a></li>
             <li id="nav-logout" style="display:none"><a href="/auth/logout" style="color:#ef4444!important">Wyloguj</a></li>
-            <li><a href="sklep.html" class="btn-shop">Sklep</a></li>
+            <li id="nav-admin" style="display:none"><a href="admin.html" style="color:var(--gold); font-weight:800"><i class="fa-solid fa-shield-halved"></i> Admin Panel</a></li><li><a href="sklep.html" class="btn-shop">Sklep</a></li>
         </ul>
         <div class="hamburger" onclick="this.classList.toggle('open');document.querySelector('.nav-links').classList.toggle('show')">
             <span></span><span></span><span></span>
@@ -52,25 +54,26 @@
 
 <header class="page-header">
     <h1>Regulamin <span>SideRP</span></h1>
-    <p>Zapoznaj się z zasadami przed dołączeniem do serwera.</p>
+    <p>Zapoznaj sie z zasadami przed dolaczeniem do serwera.</p>
 </header>
 
 <section class="rules-section">
     <div class="container">
+        
         <div class="rules-intro">
             <div class="intro-card">
                 <i class="fa-solid fa-sun intro-icon"></i>
                 <h2>Witaj na <span>SideRP</span></h2>
-                <p>SideRP jest serwerem RolePlay. Przed rozpoczęciem rozgrywki zapoznaj się z poniższymi zasadami.</p>
+                <p>Nasz serwer to miejsce, gdzie RolePlay spotyka się z klimatem pustyni, małych miasteczek i bezprawia. Tworzymy społeczność opartą na jakościowej grze fabularnej, wzajemnym szacunku i zgodności z zasadami.</p>
                 <div class="intro-note">
-                    Grając na SideRP, akceptujesz pełną treść niniejszego regulaminu. Nieznajomość regulaminu nie zwalnia z jego przestrzegania.
+                    Grając na SideRP, akceptujesz pełną treść niniejszego regulaminu. Nieznajomość zasad nie zwalnia z odpowiedzialności.
                 </div>
             </div>
         </div>
 
         <div class="chapter-title">
-            <span class="chapter-num">Rozdział I</span>
-            <h2>Postanowienia Ogólne</h2>
+            <span class="chapter-num">Rozdzial I</span>
+            <h2>Zasady Ogolne</h2>
         </div>
 
         <div class="rules-list">
@@ -83,232 +86,275 @@
                     </div>
                 </div>
                 <ul>
-                    <li>1.1 Serwer jest serwerem roleplay i obowiązują na nim wszystkie podstawowe zasady związane z rozgrywką roleplay.</li>
-                    <li>1.2 Użytkownik w momencie dołączenia na serwer FiveM ma obowiązek przestrzegać regulaminu oraz potwierdza jego akceptację.</li>
-                    <li>1.3 Administracja ma prawo ukarać każdego użytkownika gdy (według nich) szkodzi on serwerowi.</li>
-                    <li>1.4 Administracja może ukarać użytkownika za coś co nie znajduje się w regulaminie jeśli uważa to za słuszne.</li>
-                    <li>1.5 Gracz jest zobowiązany do przestrzegania i wykonywania poleceń administracji.</li>
-                    <li>1.6 Nieznajomość regulaminu nie zwalnia z jego przestrzegania.</li>
-                    <li>1.7 Zakazuje się korzystania z programów trzecich / shader&#x27;ów które ułatwią rozgrywkę (np. brak danej pogody, brak propów czy drzew), bugów, exploitów oraz innych wspomagaczy.</li>
-                    <li>1.8 Każdy gracz ma obowiązek posiadania takiego samego lub bardzo podobnego nicku na Steam oraz Discord.</li>
-                    <li>1.9 Jeśli dostajesz crasha to musisz to natychmiast zgłosić na odpowiednim kanale Discord logout-crash wysyłając screena wraz z datą i godziną. Jak tego nie zrobisz to liczy się to jako celowe opuszczenie akcji RP.</li>
-                    <li>1.10 Granie na serwerze podczas aktywnego bana będzie karane usunięciem postaci oraz banem na serwerze Discord.</li>
-                    <li>1.11 Aby otrzymać revive ktoś musi odegrać Ci pierwszą pomoc. Po otrzymanym revive należy udać się na szpital w celu odegrania zabiegu bądź skorzystania z lokalnego medyka. Wyjątkami są sytuacje wynikające z błędów gry lub decyzja Administracji przy okolicznościach typu: cofnięcie akcji, BW przez trolla.</li>
-                    <li>1.12 Jeżeli nie jesteś w żaden sposób powiązany z akcją RP to twój materiał dowodowy lub skarga nie jest brana pod uwagę. Wyjątkami są zgłoszenia cheaterów / bugerów.</li>
-                    <li>1.13 Zakazuje się przebywania na transmisji live z naszego serwera podczas rozgrywki na serwerze.</li>
-                    <li>1.14 Zakazuje się posiadania nicków z customowymi czcionkami oraz customowymi znakami (wszystkie inne niż standardowe).</li>
-                    <li>1.15 Zakazuje się posiadania w nickach jakichkolwiek reklam stron niepowiązanych z serwerem.</li>
-                    <li>1.16 Niektóre punkty regulaminu można nagiąć na jednorazową akcję po ustaleniu z zarządem.</li>
-                    <li>1.17 Współpraca z cheater&#x27;em będzie karana banem oraz usunięciem postaci.</li>
-                    <li>1.18 Zakazuje się podejmowania transakcji między graczami poza IC. Administracja nie ponosi odpowiedzialności za stracone pieniądze, przedmioty.</li>
-                    <li>1.19 Podczas rozgrywki na serwerze zażyte środki odurzające oraz stan upojenia alkoholowego nie usprawiedliwia łamania regulaminu przez gracza. Administracja ma prawo do zbanowania osoby jeżeli dostrzeże zażyte środki/zbyt mocny stan upojenia alkoholowego.</li>
-                    <li>1.20 Zakazuje się upubliczniania frag-movie z serwera.</li>
-                    <li>1.21 Zakazuje się współdzielenia konta Steam (sytuacja kiedy ktoś inny gra na serwerze na Twoim koncie).</li>
+                    <li>1.1 Przestrzegaj regulaminu i zachowuj kulture osobista.</li>
+                    <li>1.2 Administracja ma ostateczne zdanie w sytuacjach nieujetych w regulaminie.</li>
+                    <li>1.3 Ignorancja regulaminu nie stanowi usprawiedliwienia.</li>
+                    <li>1.4 Administracja moze zmienic regulamin — sprawdzaj Discorda.</li>
+                    <li>1.5 Blędy i exploity nalezy zglaszac. Wykorzystywanie = Ban Perm.</li>
+                    <li>1.6 Cheaty, hacki i makra sa surowo zabronione (Ban Perm).</li>
+                    <li>1.7 Zakaz udostepniania i handlu kontami.</li>
+                    <li>1.8 Multikonta sluza tylko do dodatkowych postaci, nie do omijania kar.</li>
+                    <li>1.9 Zakaz prowokowania administracji i trollowania.</li>
+                    <li>1.10 Obowiazek stosowania sie do polecen administracji podczas interwencji.</li>
                 </ul>
             </div>
-        </div>
 
-        <div class="chapter-title">
-            <span class="chapter-num">Rozdział II</span>
-            <h2>Komunikacja</h2>
-        </div>
-
-        <div class="rules-list">
             <div class="rule-card">
                 <div class="rule-header">
                     <div class="rule-icon"><i class="fa-solid fa-comments"></i></div>
                     <div>
                         <span class="rule-number">§2</span>
-                        <h3>Komunikacja</h3>
+                        <h3>Komunikacja na serwerze</h3>
                     </div>
                 </div>
                 <ul>
-                    <li>2.1 Każdy gracz który rozpoczyna rozgrywkę na serwerze jest zobowiązany do posiadania sprawnego mikrofonu.</li>
-                    <li>2.2 Zakazuje się przesiadywania (nawet wyciszonym) oraz porozumiewania się przez programy trzecie (Discord lub inne) podczas przebywania na naszym serwerze. Wyjątkiem oczywiście jest Administracja na Discordzie Side Roleplay oraz kanały rządowe/sprawy do administracji na czas wyjaśniania sprawy.</li>
-                    <li>2.3 Korzystanie z czatu OOC jak, Local OOC i /pw powinno być ograniczone do minimum - korzystamy tylko i wyłącznie gdy jest to konieczność, nie prowadzimy konwersacji.</li>
-                    <li>2.4 Do prowadzenia narracji podczas rozgrywki służą komendy /me, /do, /opis oraz /try.</li>
-                    <li>2.5 Masz obowiązek odgrywać za pomocą /me oraz /do wszystkie czynności, do których nie ma animacji widocznej dla innych graczy. Jeśli masz sytuację stresową możesz odegrać to na czacie głosowym. Co to jest sytuacja stresowa? Sytuacja stresowa to np. taka kiedy strzelałeś się z kimś i słyszysz, że jedzie policja.</li>
+                    <li>2.1 Zakaz mowy nienawisci i dyskryminacji (IC oraz OOC).</li>
+                    <li>2.2 Czat OOC sluzy wylacznie do komunikacji pozapostacowej.</li>
+                    <li>2.3 Czat IC (glosowy, /me, /do) sluzy TYLKO do RolePlay.</li>
+                    <li>2.4 Zakaz spamowania komendami (/me, /do, /ad itp.).</li>
+                    <li>2.5 Reklamowanie innych serwerow = Ban Perm bez odwolania.</li>
+                    <li>2.6 Streamowanie jest dozwolone z poszanowaniem prywatnosci innych.</li>
+                    <li>2.7 Wulgarne nicki sa zabronione.</li>
                 </ul>
             </div>
         </div>
 
         <div class="chapter-title">
-            <span class="chapter-num">Rozdział III</span>
-            <h2>Postać</h2>
+            <span class="chapter-num">Rozdzial II</span>
+            <h2>Zasady RolePlay</h2>
         </div>
 
         <div class="rules-list">
             <div class="rule-card">
                 <div class="rule-header">
-                    <div class="rule-icon"><i class="fa-solid fa-user"></i></div>
+                    <div class="rule-icon"><i class="fa-solid fa-user-pen"></i></div>
                     <div>
                         <span class="rule-number">§3</span>
-                        <h3>Postać</h3>
+                        <h3>Tworzenie postaci</h3>
                     </div>
                 </div>
                 <ul>
-                    <li>3.1 Zakazuje się posiadania Celebrity Name.</li>
-                    <li>3.2 Gracz na serwerze może posiadać tylko jedną postać (chyba, że dostał pozwolenie na odpowiednim kanale).</li>
-                    <li>3.3 Zakazuje się noszenia na sobie zbugowanych ubrań.</li>
-                    <li>3.4 Po obudzeniu się w szpitalu nie pamiętasz ostatniej akcji przez, którą do niego trafiłeś.</li>
-                    <li>3.5 Character Kill (CK) każda osoba może zrobić tylko swojej postaci, wyjątkiem są liderzy organizacji przestępczych po konsultacji z adminami.</li>
-                    <li>3.6 Każdy gracz ma obowiązek posiadać przy sobie dowód chyba, że jest szefem organizacji przestępczej lub członkiem CTTF, GIU (tylko podczas pełnienia służby). W takim wypadku po wcześniejszym odegraniu może nie mieć przy sobie dowodu.</li>
-                    <li>3.7 Zakazuje się przenoszenia wszelkich informacji, majątku, sugerowania się informacjami oraz jakichkolwiek znajomości z drugą postacią.</li>
-                    <li>3.8 Jeśli bardzo zagrażasz interesom jakiejś organizacji przestępczej np. sprzedajesz długą broń to szef danej organizacji ma prawo zrobić Ci CK. Oczywiście najpierw trzeba ustalić wszystko z administracją.</li>
-                    <li>3.9 Jeżeli ktoś ma maskę i nie moduluje swojego głosu w żaden sposób to inne osoby kojarząc lub znając daną osobę IC mają prawo ją rozpoznać.</li>
-                    <li>3.10 Zakazuje się posiadania / używania takiej samej lub podobnej ksywki IC jak nicku OOC, poza przypadkami kiedy ma to jakiekolwiek odniesienie IC.</li>
-                    <li>3.11 Zakazuje się odgrywania takiego samego głosu na obydwu postaciach (jeżeli masz dwie postaci masz obowiązek modulować swój głos).</li>
-                    <li>3.12 Zakazuje się tworzenia postaci o danych polskojęzycznych / z</li>
-                    <li>3.13 Zakazuje się czynnego odgrywania postaci &quot;crime&quot; podczas posiadania drugiej postaci w LSPD/LSSD oraz DOJ (można jedną z nich zawiesić na minimum miesiąc po zgłoszeniu tego do zarządu serwera).</li>
+                    <li>3.1 Postac musi posiadac logiczna i unikalna fabule.</li>
+                    <li>3.2 Zakaz postaci "superbohaterskich" lub memicznych.</li>
+                    <li>3.3 Konsekwentne odgrywanie charakteru postaci.</li>
+                    <li>3.4 Zakaz grania kilku postaci w jednej akcji.</li>
+                    <li>3.5 Po smierci IC postac traci pamiec z ostatnich 30 minut.</li>
+                    <li>3.6 Metagaming (uzywanie wiedzy OOC w IC) jest zabroniony.</li>
+                    <li>3.7 Fear RP — musisz dbac o zycie swojej postaci.</li>
                 </ul>
             </div>
-        </div>
 
-        <div class="chapter-title">
-            <span class="chapter-num">Rozdział IV</span>
-            <h2>Crime</h2>
-        </div>
+            <div class="rule-card">
+                <div class="rule-header">
+                    <div class="rule-icon"><i class="fa-solid fa-car"></i></div>
+                    <div>
+                        <span class="rule-number">§4</span>
+                        <h3>Jazda i pojazdy</h3>
+                    </div>
+                </div>
+                <ul>
+                    <li>4.1 Jazda musi byc realistyczna (zakaz Fail Driving).</li>
+                    <li>4.2 Wypadki muszą byc ogrywane (/me, /do).</li>
+                    <li>4.3 Uzywaj aut zgodnie z ich przeznaczeniem.</li>
+                    <li>4.4 VDM — celowe rozjezdzanie graczy jest zabronione.</li>
+                    <li>4.5 Zakaz uzywania pojazdow jako broni.</li>
+                </ul>
+            </div>
 
-        <div class="rules-list">
             <div class="rule-card">
                 <div class="rule-header">
                     <div class="rule-icon"><i class="fa-solid fa-gun"></i></div>
                     <div>
-                        <span class="rule-number">§4</span>
-                        <h3>Crime</h3>
-                    </div>
-                </div>
-                <ul>
-                    <li>4.1 Zabrania się okradania, zabijania oraz porywania medyków na służbie jeśli sami nie zaczęli inicjacji lub nie dołączyli do akcji.</li>
-                    <li>4.2 Zabrania się kradzieży pojazdów służb publicznych bez wcześniejszego udziału obu stron w akcji RP.</li>
-                    <li>4.3 Odbicie osób trzecich może odbyć się podczas transportowania więźnia do zakładu karnego (konwój) lub transportowania na posterunek policji.</li>
-                    <li>4.4 Porywanie obywateli może nastąpić gdy na służbie jest minimum dwóch policjantów. Wyjątkiem są porwania z terenu narkotyków oraz rozpoczęcie inicjacji ze strony przeciwnika.</li>
-                    <li>4.5 Porywać policjantów można od czterech funkcjonariuszy na służbie, wyjątkiem jest rozpoczęcie agresywnej akcji ze strony policjanta.</li>
-                    <li>4.6 Porywać dla okupu można od pięciu policjantów na służbie.</li>
-                    <li>4.7 Zielone strefy: komendy, szpitale, salon samochodowy, warsztat mechaników (LSC), urząd pracy, parking główny, psycholog, siedziby firm, miejsca legalnych prac (szatnie też), teren więzienia oraz wokół, apartamenty.</li>
-                    <li>4.8 Wyjątkiem co do porywania itd. na legalnych pracach jest dostawca pizz&#x27;y.</li>
-                    <li>4.9 Jeżeli gracz po wcześniejszej inicjacji ucieka na zieloną strefę masz prawo kontynuować akcję RP, jednak na szpitalu, komendzie i więzieniu oraz w pobliżu jest całkowity zakaz odbijania, porywania i strzelanin. Wyjątkiem jest LSPD oraz LSSD.</li>
-                    <li>4.10 Zakazuje się dokonywania aktów seksualnych i ran trwałych (wyjątkiem jest zgoda Administracji po przedstawieniu dowodów) bez obustronnej zgody. Akcja ta musi odbyć się w ustronnym miejscu.</li>
-                    <li>4.11 Za każdego obywatela przy napadach czy negocjacjach jest tylko</li>
-                    <li>4.12 Zabrania się okradania na większą kwotę niż 100,000 $ (wartość) czystych pieniędzy (podczas prowadzenia nielegalnych interesów można), brudne pieniądze można zabierać wszystkie.</li>
-                    <li>4.13 Maksymalna kwota, którą możesz wziąć za obywatela to: 30,000 $.</li>
-                    <li>4.14 Maksymalna kwota, którą możesz brać za Zarząd SASP/SAMS to: 120,000 $.</li>
-                    <li>4.15 Zakazuje się okradania kont bankowych.</li>
-                    <li>4.16 Podczas sprzedawania narkotyków maksymalna ilość osób w akcji to trzy osoby (w akcję wlicza się pościg i ewentualna strzelanina).</li>
-                    <li>4.17 Zakazuje się porywania / okradania ludzi piorących pieniądze, spod kasyna również.</li>
-                    <li>4.18 Zakazuje się porywania pracowników / zabierania aut wypożyczonych na jazdę testową w Luxury Cars.</li>
-                    <li>4.19 Napad na sklep można rozpocząć gdy na służbie jest minimum trzech policjantów oraz dwóch napastników (max trzech).</li>
-                    <li>4.20 Napad na jubilera można rozpocząć gdy na służbie jest minimum trzech policjantów oraz trzech napastników (max czterech).</li>
-                    <li>4.21 Napad na bank można rozpocząć gdy na służbie jest minimum czterech policjantów oraz trzech napastników (max pięciu).</li>
-                    <li>4.22 Napad na jacht można rozpocząć gdy na służbie jest minimum pięciu policjantów oraz czterech napastników (max sześciu).</li>
-                    <li>4.23 Napad na Human Labs można rozpocząć gdy na służbie jest minimum pięciu policjantów oraz czterech napastników (max sześciu).</li>
-                    <li>4.24 Na napadzie na sklep możesz mieć maksymalnie trzech zakładników.</li>
-                    <li>4.25 Na napadzie na jubilera możesz mieć maksymalnie czterech zakładników.</li>
-                    <li>4.26 Na napadzie na bank możesz mieć maksymalnie pięciu zakładników (Pacyfik siedmiu).</li>
-                    <li>4.27 Na napadzie na jacht możesz mieć maksymalnie ośmiu zakładków.</li>
-                    <li>4.28 Na napadzie na Humane Labs możesz mieć maksymalnie dziesięciu zakładników.</li>
-                    <li>4.29 Podczas konwoju napastników łącznie może być maksymalnie 8. Wyjątkiem są zarejestrowane organizacje przestępcze - 10. FP może być maksymalnie 8 z wyjątkami - IC.</li>
-                    <li>4.30 Zakazuje się noszenia ubrań oraz podszywania się pod służby publiczne oraz firmy.</li>
-                    <li>4.31 Przed i po restarcie serwera każdy obywatel ma 10 minutowy immunitet. Oznacza to, że nie może dojść do żadnej akcji RP powiązanej z przestępstwem, lub z udziałem LSPD/LSSD (chyba, że akcja była rozpoczęta przed restartem).</li>
-                    <li>4.32 Przy porywaniu FP z miejsca poprzedniej akcji (np. sprzedaż narkotyków czy napad) limit dla policji zostaje zniesiony i rozpoczyna się inna akcja RP przy której może już być 8 FP. Porwanie zaczyna się od zakucia i wsadzenie do auta, porwani policjanci nie wliczają się w limit.</li>
-                    <li>4.33 Zakazuje się odgrywania chowania &quot;łupu&quot; z napadu do momentu finalnego ukończenia akcji.</li>
-                    <li>4.34 Jako członek SASP masz obowiązek szanować życie innych członków Departamentów oraz zakładników. Wyjątkiem jest zerwanie negocjacji lub wjazd.</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="chapter-title">
-            <span class="chapter-num">Rozdział V</span>
-            <h2>Rozgrywka</h2>
-        </div>
-
-        <div class="rules-list">
-            <div class="rule-card">
-                <div class="rule-header">
-                    <div class="rule-icon"><i class="fa-solid fa-gamepad"></i></div>
-                    <div>
                         <span class="rule-number">§5</span>
-                        <h3>Rozgrywka</h3>
+                        <h3>Przestepczosc</h3>
                     </div>
                 </div>
                 <ul>
-                    <li>5.1 Zakazuje się odgrywania przeglądania cudzego telefonu jeśli ta osoba nie wyraziła na to zgody.</li>
-                    <li>5.2 Zakazuje się odradzania w szpitalu na BW jeśli akcja jest dalej kontynuowana (np. policja jedzie na miejsce zdarzenia). Wszelkie takie odrodzenia będą traktowane jako unikanie akcji RP i będą karane banem.</li>
-                    <li>5.3 Zakazuje się ingerencji w daną akcję RP, jeśli w ŻADEN sposób nie jesteś z nią powiązany.</li>
-                    <li>5.4 Zakazuje się samodzielnego odgrywania poważnych operacji (np. wyciągania kuli).</li>
-                    <li>5.5 Każdy gracz zobowiązany jest do odgrywania bólu i strachu, adekwatnie do sytuacji.</li>
-                    <li>5.6 Po udzieleniu pierwszej pomocy (operacja lub lokalny medyk) przez 10 minut nie możesz wykonywać czynności która mogłaby spowodować uszczerbek na Twoim zdrowiu, masz obowiązek odgrywać rannego. Zakazuje się również całkowitego powrotu do akcji przez, którą byłeś w szpitalu.</li>
-                    <li>5.7 Zakazuje się przechodzenia przez ściany itd. za pomocą animacji.</li>
-                    <li>5.8 Zakazuje się opuszczania akcji RP podczas jej trwania. Złamanie tego podpunktu grozi banem.</li>
-                    <li>5.9 Wejścia do interiorów są traktowane adekwatnie do budynku jako zwykłe drzwi lub windy.</li>
-                    <li>5.10 Podczas wykonywania pracy masz obowiązek poruszać się firmowym pojazdem oraz być w stroju roboczym!</li>
-                    <li>5.11 Zakazuje się posiadania rzeczy powiązanych z SASP/SAMS/LSC: radio, GPS (zabrać można), pałka policyjna oraz pistolet sygnałowy jeśli nie jesteś ich członkiem.</li>
-                    <li>5.12 Zakazuje się wjeżdżania w innych graczy, nawet jeśli masz do tego inicjacje (chodzi o wjeżdżanie w ludzi i motocykle, samochody można pitować).</li>
-                    <li>5.13 Członkowie: DOJ/SASP/SAMS/LSC mają całkowity zakaz bycia skorumpowanym oraz brania udziału w czymkolwiek powiązanym z &quot;gangsterką&quot;. Wyjątkami są działania członków GIU przyczyniające się do śledztwa.</li>
-                    <li>5.14 Zakazuje się latania helikopterem/samolotem itd. jeśli nie posiadasz odpowiedniej licencji.</li>
-                    <li>5.15 Rozpoczęcie każdej akcji uważane jest przez inicjację słowną używając voice-chatu. Przed oddaniem jakichkolwiek strzałów należy zainicjować do drugiej strony w sposób możliwy do usłyszenia dla przeciwników. Policja oraz zarejestrowane organizacje przestępcze mają przywilej inicjacji grupowej, w której wystarczy, że jedna osoba zainicjuje głosowo. Warunkiem inicjacji grupowej jest ten sam lub bardzo podobny ubiór wszystkich członków grupy, która inicjuje grupowo. Dopiero po odpowiedniej inicjacji akcji RP możesz oddać strzały, inaczej będzie to traktowane jak RDM. Po oddaniu strzałów przez drugą stronę możesz się bronić bez inicjacji głosowej.</li>
-                    <li>5.16 Jeśli wcześniej odegrałeś, że zostawiasz np. pistolet w aucie Twoim obowiązkiem jest napisanie na /do kiedy ktoś Cię przeszukuje, że go nie masz przy sobie.</li>
-                    <li>5.17 Jeśli masz nagranie z jakimś failem lub innym wykroczeniem masz obowiązek dostarczyć je administratorowi od razu po tej akcji. Jeśli wyślesz je po jakimś czasie, może ono nie być uwzględnione.</li>
-                    <li>5.18 Służby publiczne mają prawo do PowerGamingu w celu przeniesienia, skuwania gracza itd.</li>
-                    <li>5.19 Zakazuje się odgrywania, że zostałeś postrzelony/a w kamizelkę jeśli skryptowo jej na sobie nie miałeś.</li>
-                    <li>5.20 Zakazuje się grania tak zwanego &quot;dzwon gaming&quot;.</li>
-                    <li>5.21 Aby nagranie było traktowane jako IC to w ekwipunku musi być kamera GoPro oraz trzeba mieć nagranie na którym w prawym górnym rogu widnieje ikonka nagrywania, nagrania telefonem nie są dopuszczane, nie obowiązuje to SASP, oni mają bodycama.</li>
-                    <li>5.22 Zakazuje się odgrywania chowania lub wyrzucania przedmiotów będąc w stanie BW.</li>
-                    <li>5.23 Mechanicy, którzy są na służbie mają obowiązek pełnić ją cały czas w ubraniu firmowym oraz poruszać się autami firmowymi.</li>
-                    <li>5.24 Zakazuje się uciekania na apartamenty, szpitale oraz komendy podczas akcji RP.</li>
-                    <li>5.25 Maksymalna dopuszczalna ilość osób w akcji RP to osiem z jednej strony.</li>
-                    <li>5.26 Zakazuje się sprawdzania listy graczy w pobliżu innych graczy, wyjątkiem jest sprawdzenie ID w celu zgłoszenia innego gracza. Złamanie tej zasady będzie skutkowało banem za niepoprawne użycie zetki.</li>
-                    <li>5.27 Zakazuje się odgrywania zdejmowania tablicy rejestracyjnej pojazdu.</li>
-                    <li>5.28 Zakazuje się odgrywania zabierania czyjegoś dowodu osobistego (chodzi o zabranie &quot;na stałe&quot; nie tymczasowe np. przez policjanta).</li>
+                    <li>5.1 Przestepczosc musi byc logicznie umotywowana fabularnie.</li>
+                    <li>5.2 Akcje wymagaja RP przed, w trakcie i po zdarzeniu.</li>
+                    <li>5.3 Akcje musza zostawiac slady lub miec swiadkow.</li>
+                    <li>5.4 Przestrzegaj TABELI LIMITÓW (ponizej).</li>
+                    <li>5.5 Zakaz farmowania akcji przestepczych.</li>
                 </ul>
             </div>
-        </div>
 
-        <div class="chapter-title">
-            <span class="chapter-num">Rozdział VI</span>
-            <h2>Regulamin Organizacji</h2>
-        </div>
-
-        <div class="rules-list">
             <div class="rule-card">
                 <div class="rule-header">
-                    <div class="rule-icon"><i class="fa-solid fa-users"></i></div>
+                    <div class="rule-icon"><i class="fa-solid fa-handcuffs"></i></div>
                     <div>
                         <span class="rule-number">§6</span>
-                        <h3>Regulamin Organizacji</h3>
+                        <h3>Sluzby Publiczne</h3>
                     </div>
                 </div>
                 <ul>
-                    <li>6.1 Ilość osób w organizacji przestępczej jest nieograniczona.</li>
-                    <li>6.2 Minimalna ilość osób w organizacji przestępczej to pięć.</li>
-                    <li>6.3 Zakazuje się posiadania dwóch postaci w różnych organizacjach.</li>
-                    <li>6.4 Założyciel danej organizacji przestępczej po części bierze odpowiedzialność za wszystkich członków danej organizacji.</li>
-                    <li>6.5 Szef organizacji, aby zrobić CK jakiemuś członkowi musi to uzgodnić z administracją.</li>
-                    <li>6.6 Aby przekazać stanowisko szefa organizacji przestępczej osobie trzeciej, musi być ona minimum tydzień w organizacji.</li>
+                    <li>6.1 Szanuj RP LSPD, EMS i GOV — to nie sa boty.</li>
+                    <li>6.2 Zakaz zabijania sluzb bez powaznego powodu fabularnego.</li>
+                    <li>6.3 Porwanie sluzby wymaga min. 4 graczy w gangu.</li>
+                    <li>6.4 Budynki sluzb to Green Zone (zakaz campowania).</li>
+                    <li>6.5 Fail RP w sluzbach jest surowo karany.</li>
                 </ul>
             </div>
         </div>
 
         <div class="chapter-title">
-            <span class="chapter-num">Rozdział VII</span>
-            <h2>Regulamin Firm</h2>
+            <span class="chapter-num">Rozdzial III</span>
+            <h2>Definicje i Zakazy</h2>
+        </div>
+
+        <div class="rules-grid">
+            <div class="def-card"><h4>Fail RP</h4><p>Lamanie realizmu gry lub logiki swiata.</p></div>
+            <div class="def-card"><h4>VDM</h4><p>Rozjezdzanie ludzi autem bez powodu.</p></div>
+            <div class="def-card"><h4>MG (Metagaming)</h4><p>Uzywanie wiedzy z Discorda/Streamow w grze.</p></div>
+            <div class="def-card"><h4>PG (Power Gaming)</h4><p>Narzucanie woli innym bez szansy na reakcje.</p></div>
+            <div class="def-card"><h4>RDM</h4><p>Zabijanie bez powodu fabularnego.</p></div>
+            <div class="def-card"><h4>CL (Combat Log)</h4><p>Ucieczka z gry podczas akcji (Ban).</p></div>
+            <div class="def-card"><h4>RK (Revenge Kill)</h4><p>Zemsta po smierci i powrot na miejsce zgonu.</p></div>
+            <div class="def-card"><h4>CB (Combat Baiting)</h4><p>Prowokowanie policji do poscigu.</p></div>
+        </div>
+
+        <div class="chapter-title">
+            <span class="chapter-num">Rozdzial IV</span>
+            <h2>Strefy Serwera</h2>
+        </div>
+
+        <div class="zones-grid">
+            <div class="zone-card green">
+                <h3><i class="fa-solid fa-leaf"></i> Green Zone</h3>
+                <p>Spawn, Szpitale, Komisariaty, Urzedy.</p>
+                <ul>
+                    <li>Zakaz przestepstw</li>
+                    <li>Zakaz ucieczki do GZ</li>
+                </ul>
+            </div>
+            <div class="zone-card red">
+                <h3><i class="fa-solid fa-skull"></i> Red Zone</h3>
+                <p>Tereny gangow, Pustynia, Przemyt.</p>
+                <ul>
+                    <li>Zlagodzone zasady strzelania</li>
+                    <li>Wjazd na wlasne ryzyko</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chapter-title">
+            <span class="chapter-num">Rozdzial V</span>
+            <h2>Drugie Postacie i "Pedy"</h2>
         </div>
 
         <div class="rules-list">
             <div class="rule-card">
                 <div class="rule-header">
-                    <div class="rule-icon"><i class="fa-solid fa-building"></i></div>
+                    <div class="rule-icon"><i class="fa-solid fa-users-rays"></i></div>
                     <div>
-                        <span class="rule-number">§7</span>
-                        <h3>Regulamin Firm</h3>
+                        <span class="rule-number">§21</span>
+                        <h3>Drugie postacie</h3>
                     </div>
                 </div>
                 <ul>
-                    <li>7.1 Firmy mogą zajmować się nielegalnymi interesami, jednak muszą mieć jakąś &quot;przykrywkę&quot;, aby nikt nie mógł się domyślić, że jest coś nie tak.</li>
-                    <li>7.2 Jeśli zarząd firmy zdecyduje się na prowadzenie nielegalnych interesów, nie może on zrezygnować z prowadzenia legalnej działalności.</li>
-                    <li>7.3 Policja ma prawo &quot;zraidować&quot; teren / siedzibę firmy tylko, jeśli członek firmy popełnił przestępstwo i grozi mu wysoka kara.</li>
-                    <li>7.4 Zakazuje się sprzedaży / powierzania / przekazania firmy z pozycji Szefa / Właściciela.</li>
+                    <li>21.1 Kazdy gracz moze posiadac do 3 postaci.</li>
+                    <li>21.2 Postacie musza byc niezalezne — zakaz przekazywania majatku.</li>
+                    <li>21.3 Zakaz grania dwiema postaciami w tej samej frakcji/gangu.</li>
+                    <li>21.4 Jesli jedna postac jest w sluzbach, druga nie moze byc w gangu.</li>
+                    <li>21.5 Postaci nie moga sie spotykac IC ani wspolpracowac.</li>
                 </ul>
+            </div>
+            <div class="rule-card">
+                <div class="rule-header">
+                    <div class="rule-icon"><i class="fa-solid fa-child"></i></div>
+                    <div>
+                        <span class="rule-number">§22</span>
+                        <h3>Dzieci i Zwierzeta</h3>
+                    </div>
+                </div>
+                <ul>
+                    <li>22.1 Dozwolone jest granie dziecmi i zwierzetami (pedy).</li>
+                    <li>22.2 Gra dzieckiem wymaga zgody administracji i szczegolnego RP.</li>
+                    <li>22.3 Zwierzeta musza byc realistyczne — pies nie moze mowic ani prowadzic akcji.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chapter-title">
+            <span class="chapter-num">Rozdzial VI</span>
+            <h2>Kary i Odwolania</h2>
+        </div>
+
+        <div class="rules-list">
+            <div class="rule-card">
+                <div class="rule-header">
+                    <div class="rule-icon"><i class="fa-solid fa-handcuffs"></i></div>
+                    <div>
+                        <span class="rule-number">§23</span>
+                        <h3>System kar</h3>
+                    </div>
+                </div>
+                <ul>
+                    <li>Ostrzezenie — pierwsza drobna przewina.</li>
+                    <li>Kick — wyrzucenie z serwera.</li>
+                    <li>Ban czasowy (1-30 dni) — za powazne lamanie zasad.</li>
+                    <li>Ban permanentny — za cheaty, exploity i toksyczne zachowanie.</li>
+                </ul>
+            </div>
+            <div class="rule-card">
+                <div class="rule-header">
+                    <div class="rule-icon"><i class="fa-solid fa-envelope-open-text"></i></div>
+                    <div>
+                        <span class="rule-number">§24</span>
+                        <h3>Odwolania</h3>
+                    </div>
+                </div>
+                <ul>
+                    <li>24.1 Odwolania sklada sie na Discordzie w kanale #odwolania.</li>
+                    <li>24.2 Musi zawierac ID postaci, date bana i szczere wyjasnienie.</li>
+                    <li>24.3 Administracja rozpatruje wnioski w ciagu 48 godzin.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chapter-title">
+            <span class="chapter-num">Rozdzial VII</span>
+            <h2>Postanowienia koncowe</h2>
+        </div>
+
+        <div class="rules-list">
+            <div class="rule-card">
+                <div class="rule-header">
+                    <div class="rule-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+                    <div>
+                        <span class="rule-number">§25</span>
+                        <h3>Zmiany regulaminu</h3>
+                    </div>
+                </div>
+                <ul>
+                    <li>25.1 Administracja zastrzega sobie prawo do zmiany regulaminu.</li>
+                    <li>25.2 Gracz ma obowiazek śledzenia zmian na Discordzie.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chapter-title">
+            <span class="chapter-num">Rozdzial VIII</span>
+            <h2>Tabela Limitow Akcji</h2>
+        </div>
+
+        <div class="limits-section">
+            <div class="limit-group">
+                <h3><i class="fa-solid fa-vault"></i> Napady</h3>
+                <div class="limit-table">
+                    <div class="limit-row"><span>Sklep / Stacja</span> <span>2-4 osoby</span> </div>
+                    <div class="limit-row"><span>Jubiler</span> <span>3-6 osob</span> </div>
+                    <div class="limit-row"><span>Bank Fleeca</span> <span>3-6 osob</span> </div>
+                    <div class="limit-row"><span>Pacific Bank</span> <span>6-10 osob</span> </div>
+                    <div class="limit-row"><span>Konwoje</span> <span>4-8 osob</span> </div>
+                </div>
+            </div>
+            <div class="limit-group">
+                <h3><i class="fa-solid fa-masks-theater"></i> Porwania</h3>
+                <div class="limit-table">
+                    <div class="limit-row"><span>Cywil / Gang</span> <span>2-6 osob</span> </div>
+                    <div class="limit-row"><span>EMS</span> <span>4-6 osob</span> </div>
+                    <div class="limit-row"><span>LSPD</span> <span>4-8 osob</span> </div>
+                </div>
             </div>
         </div>
 
@@ -338,8 +384,9 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>© 2026 SideRP. Wszelkie prawa zastrzeżone.</p>
+            <p>© 2026 SideRP. Wszelkie prawa zastrzezone.</p>
         </div>
+    </div>
     </div>
 </footer>
 
@@ -356,7 +403,8 @@
     </div>
 </div>
 
-<script src="side.js?v=3.0"></script>
+<script src="Sidepanel.js?v=2.0"></script>
 <script src="premium.js"></script>
+
 </body>
 </html>
