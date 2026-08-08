@@ -107,12 +107,19 @@
         /* LIVE SHOP TICKER */
         .shop-live-bar {
             width: 100%;
+            margin-top: 70px;
             background: rgba(8, 10, 13, 0.96);
             border-top: 1px solid rgba(93,193,249,0.08);
             border-bottom: 1px solid rgba(93,193,249,0.18);
             box-shadow: 0 8px 30px rgba(0,0,0,0.18);
             position: relative;
             z-index: 20;
+        }
+
+        @media (max-width: 768px) {
+            .shop-live-bar {
+                margin-top: 70px;
+            }
         }
         .shop-live-inner {
             max-width: 1250px;
