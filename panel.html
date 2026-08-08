@@ -145,7 +145,187 @@
     .reviewer-status { align-self:flex-start; }
     .reviewer-meta { white-space:normal; }
 }
-.shop-admin-order{position:relative;overflow:hidden;background:rgba(255,255,255,.018);border:1px solid var(--glass-border);border-radius:var(--radius);padding:1.15rem 1.2rem;transition:.25s ease}.shop-admin-order:hover{border-color:rgba(93,193,249,.16);transform:translateY(-2px);box-shadow:0 12px 35px rgba(0,0,0,.25)}.shop-admin-order-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}.shop-admin-order-info strong{display:block;color:#fff;font-size:.9rem}.shop-admin-order-info span{display:block;color:#555;font-size:.68rem;margin-top:.3rem}.shop-admin-order-price{color:var(--gold);font-weight:900;font-size:.9rem;white-space:nowrap}.shop-admin-order-note{margin-top:.8rem;color:#888;font-size:.72rem;line-height:1.5}.shop-admin-order-actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem}.order-admin-status{font-style:normal;font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.7px;padding:.35rem .6rem;border-radius:999px}.order-admin-status.awaiting_payment{color:#ffc86d;background:rgba(255,193,7,.08)}.order-admin-status.paid{color:#7fc8ff;background:rgba(93,193,249,.08)}.order-admin-status.fulfilled{color:#7ee59b;background:rgba(34,197,94,.08)}.order-admin-status.rejected{color:#ff8b92;background:rgba(239,68,68,.08)}
+.shop-admin-order{
+    position:relative;
+    overflow:hidden;
+    background:linear-gradient(145deg,rgba(255,255,255,.025),rgba(255,255,255,.012));
+    border:1px solid var(--glass-border);
+    border-radius:var(--radius);
+    padding:1.35rem;
+    transition:.25s ease;
+}
+
+.shop-admin-order::before{
+    content:'';
+    position:absolute;
+    left:0;
+    top:0;
+    bottom:0;
+    width:3px;
+    background:var(--gold);
+    opacity:.55;
+}
+
+.shop-admin-order:hover{
+    border-color:rgba(93,193,249,.22);
+    transform:translateY(-2px);
+    box-shadow:0 15px 40px rgba(0,0,0,.28);
+}
+
+.shop-admin-order-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:1.5rem;
+}
+
+.shop-admin-order-main{
+    min-width:0;
+    flex:1;
+}
+
+.shop-admin-order-product{
+    display:flex;
+    align-items:center;
+    gap:.8rem;
+    margin-bottom:1rem;
+}
+
+.shop-admin-order-product-icon{
+    width:42px;
+    height:42px;
+    flex:0 0 42px;
+    border-radius:11px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--gold);
+    background:var(--gold-dim);
+    border:1px solid rgba(93,193,249,.15);
+}
+
+.shop-admin-order-product strong{
+    display:block;
+    color:#fff;
+    font-size:1rem;
+    font-weight:800;
+}
+
+.shop-admin-order-number{
+    color:#555;
+    font-size:.68rem;
+    margin-top:.2rem;
+}
+
+.shop-admin-order-details{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:.65rem;
+    margin-top:.5rem;
+}
+
+.shop-admin-order-detail{
+    padding:.75rem .85rem;
+    background:rgba(0,0,0,.16);
+    border:1px solid rgba(255,255,255,.045);
+    border-radius:10px;
+}
+
+.shop-admin-order-detail b{
+    display:block;
+    color:#555;
+    font-size:.58rem;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin-bottom:.3rem;
+}
+
+.shop-admin-order-detail span{
+    display:block;
+    color:#ccc;
+    font-size:.75rem;
+    word-break:break-word;
+}
+
+.shop-admin-order-price-box{
+    text-align:right;
+    flex-shrink:0;
+}
+
+.shop-admin-order-price{
+    color:var(--gold);
+    font-weight:900;
+    font-size:1rem;
+    white-space:nowrap;
+    margin-bottom:.55rem;
+}
+
+.order-admin-status{
+    display:inline-block;
+    font-style:normal;
+    font-size:.6rem;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.7px;
+    padding:.4rem .7rem;
+    border-radius:999px;
+    border:1px solid transparent;
+}
+
+.order-admin-status.awaiting_payment{
+    color:#ffc86d;
+    background:rgba(255,193,7,.08);
+    border-color:rgba(255,193,7,.14);
+}
+
+.order-admin-status.paid{
+    color:#7fc8ff;
+    background:rgba(93,193,249,.08);
+    border-color:rgba(93,193,249,.14);
+}
+
+.order-admin-status.fulfilled{
+    color:#7ee59b;
+    background:rgba(34,197,94,.08);
+    border-color:rgba(34,197,94,.14);
+}
+
+.order-admin-status.rejected{
+    color:#ff8b92;
+    background:rgba(239,68,68,.08);
+    border-color:rgba(239,68,68,.14);
+}
+
+.shop-admin-order-note{
+    margin-top:.8rem;
+    padding:.75rem .85rem;
+    color:#888;
+    font-size:.72rem;
+    line-height:1.5;
+    background:rgba(0,0,0,.12);
+    border-radius:9px;
+}
+
+.shop-admin-order-actions{
+    display:flex;
+    gap:.5rem;
+    flex-wrap:wrap;
+    margin-top:1rem;
+}
+
+@media(max-width:700px){
+    .shop-admin-order-head{
+        flex-direction:column;
+    }
+
+    .shop-admin-order-price-box{
+        text-align:left;
+    }
+
+    .shop-admin-order-details{
+        grid-template-columns:1fr;
+    }
+}
 </style>
 </head>
 <body class="mesh-bg panel-page">
@@ -301,11 +481,160 @@ async function loadOrders(){
  try{const r=await fetch('/api/reviewer/orders',{credentials:'same-origin'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Błąd pobierania zamówień');allOrders=d.orders||[];renderOrders();}catch(e){document.getElementById('orders').innerHTML=`<div class="reviewer-empty"><strong>${esc(e.message)}</strong></div>`}
 }
 function renderOrders(){
- const counts={awaiting_payment:0,paid:0,fulfilled:0,rejected:0};allOrders.forEach(o=>counts[o.status]=(counts[o.status]||0)+1);
- document.getElementById('order-total').textContent=allOrders.length;document.getElementById('order-waiting').textContent=counts.awaiting_payment;document.getElementById('order-paid').textContent=counts.paid;document.getElementById('order-done').textContent=counts.fulfilled;
- const labels={awaiting_payment:'Oczekuje na płatność',paid:'Opłacone',fulfilled:'Zrealizowane',rejected:'Odrzucone'}; const el=document.getElementById('orders');
- if(!allOrders.length){el.innerHTML='<div class="reviewer-empty"><i class="fa-regular fa-folder-open"></i><strong>Brak zamówień</strong><span>Nowe zakupy pojawią się tutaj.</span></div>';return;}
- el.innerHTML=allOrders.map(o=>`<article class="shop-admin-order"><div class="shop-admin-order-head"><div class="shop-admin-order-info"><strong>${esc(o.product)}</strong><span>${esc(o.number)} · ${esc(o.username)} · Discord ID: ${esc(o.discordId)} · ${new Date(o.createdAt).toLocaleString('pl-PL')}</span></div><div style="text-align:right"><div class="shop-admin-order-price">${esc(o.price)}</div><em class="order-admin-status ${esc(o.status)}">${labels[o.status]||o.status}</em></div></div>${o.note?`<div class="shop-admin-order-note"><b>Notatka:</b> ${esc(o.note)}</div>`:''}<div class="shop-admin-order-actions">${o.status==='awaiting_payment'?`<button class="reviewer-action open" onclick="orderStatus('${esc(o.id)}','paid')"><i class="fa-solid fa-coins"></i> Potwierdź płatność</button><button class="reviewer-action reject" onclick="orderStatus('${esc(o.id)}','rejected')"><i class="fa-solid fa-xmark"></i> Odrzuć</button>`:''}${o.status==='paid'?`<button class="reviewer-action accept" onclick="orderStatus('${esc(o.id)}','fulfilled')"><i class="fa-solid fa-check"></i> Oznacz jako zrealizowane</button>`:''}${o.status==='fulfilled'?`<span style="color:#777;font-size:.68rem;align-self:center">Zamówienie zakończone</span>`:''}</div></article>`).join('');
+  const counts = {
+    awaiting_payment: 0,
+    paid: 0,
+    fulfilled: 0,
+    rejected: 0
+  };
+
+  allOrders.forEach(o => {
+    counts[o.status] = (counts[o.status] || 0) + 1;
+  });
+
+  document.getElementById('order-total').textContent = allOrders.length;
+  document.getElementById('order-waiting').textContent = counts.awaiting_payment;
+  document.getElementById('order-paid').textContent = counts.paid;
+  document.getElementById('order-done').textContent = counts.fulfilled;
+
+  const labels = {
+    awaiting_payment: 'Oczekuje na płatność',
+    paid: 'Opłacone',
+    fulfilled: 'Zrealizowane',
+    rejected: 'Odrzucone'
+  };
+
+  const el = document.getElementById('orders');
+
+  if(!allOrders.length){
+    el.innerHTML = `
+      <div class="reviewer-empty">
+        <i class="fa-regular fa-folder-open"></i>
+        <strong>Brak zamówień</strong>
+        <span>Nowe zakupy pojawią się tutaj.</span>
+      </div>
+    `;
+    return;
+  }
+
+  el.innerHTML = allOrders.map(o => `
+    <article class="shop-admin-order">
+
+      <div class="shop-admin-order-head">
+
+        <div class="shop-admin-order-main">
+
+          <div class="shop-admin-order-product">
+            <div class="shop-admin-order-product-icon">
+              <i class="fa-solid fa-coins"></i>
+            </div>
+
+            <div>
+              <strong>${esc(o.product)}</strong>
+              <div class="shop-admin-order-number">
+                Zamówienie ${esc(o.number)}
+              </div>
+            </div>
+          </div>
+
+          <div class="shop-admin-order-details">
+
+            <div class="shop-admin-order-detail">
+              <b><i class="fa-solid fa-user"></i> Użytkownik</b>
+              <span>${esc(o.username)}</span>
+            </div>
+
+            <div class="shop-admin-order-detail">
+              <b><i class="fa-brands fa-discord"></i> Discord ID</b>
+              <span>${esc(o.discordId)}</span>
+            </div>
+
+            <div class="shop-admin-order-detail">
+              <b><i class="fa-solid fa-receipt"></i> Numer zamówienia</b>
+              <span>${esc(o.number)}</span>
+            </div>
+
+            <div class="shop-admin-order-detail">
+              <b><i class="fa-solid fa-calendar"></i> Data</b>
+              <span>${new Date(o.createdAt).toLocaleString('pl-PL')}</span>
+            </div>
+
+          </div>
+
+          ${
+            o.note
+              ? `<div class="shop-admin-order-note">
+                  <b>Notatka:</b> ${esc(o.note)}
+                 </div>`
+              : ''
+          }
+
+        </div>
+
+        <div class="shop-admin-order-price-box">
+
+          <div class="shop-admin-order-price">
+            ${esc(o.price)}
+          </div>
+
+          <em class="order-admin-status ${esc(o.status)}">
+            ${labels[o.status] || esc(o.status)}
+          </em>
+
+        </div>
+
+      </div>
+
+      <div class="shop-admin-order-actions">
+
+        ${
+          o.status === 'awaiting_payment'
+          ? `
+            <button
+              class="reviewer-action open"
+              onclick="orderStatus('${esc(o.id)}','paid')">
+              <i class="fa-solid fa-coins"></i>
+              Potwierdź płatność
+            </button>
+
+            <button
+              class="reviewer-action reject"
+              onclick="orderStatus('${esc(o.id)}','rejected')">
+              <i class="fa-solid fa-xmark"></i>
+              Odrzuć
+            </button>
+          `
+          : ''
+        }
+
+        ${
+          o.status === 'paid'
+          ? `
+            <button
+              class="reviewer-action accept"
+              onclick="orderStatus('${esc(o.id)}','fulfilled')">
+              <i class="fa-solid fa-check"></i>
+              Oznacz jako zrealizowane
+            </button>
+          `
+          : ''
+        }
+
+        ${
+          o.status === 'fulfilled'
+          ? `
+            <span style="color:#777;font-size:.68rem;align-self:center">
+              <i class="fa-solid fa-circle-check"></i>
+              Zamówienie zakończone
+            </span>
+          `
+          : ''
+        }
+
+      </div>
+
+    </article>
+  `).join('');
 }
 async function orderStatus(id,status){const note=prompt(status==='rejected'?'Powód odrzucenia (opcjonalnie):':'Notatka (opcjonalnie):','')??'';const r=await fetch('/api/reviewer/orders/'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status,note})});const d=await r.json();if(!r.ok){alert(d.error||'Nie udało się zmienić zamówienia');return}const i=allOrders.findIndex(x=>x.id===id);if(i>=0)allOrders[i]=d.order;renderOrders()}
 function toggle(id){const x=document.getElementById('ans-'+id);x.style.display=x.style.display==='block'?'none':'block'}
