@@ -188,7 +188,7 @@ ul { list-style: none; }
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    border: 1px solid rgba(93, 193, 249, 0.35);
+    border: 1px solid rgba(171, 4, 221, 0.35);
     background: rgba(93, 193, 249, 0.08);
     color: #39ff88;
     font-size: 34px;
@@ -246,7 +246,7 @@ ul { list-style: none; }
     height: 2px;
     margin: 30px auto;
     background: #39ff88;
-    box-shadow: 0 0 15px rgba(93, 193, 249, 0.6);
+    box-shadow: 0 0 15px rgba(21, 212, 3, 0.6);
 }
 
 .gallery-soon {
