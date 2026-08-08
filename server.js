@@ -1,617 +1,607 @@
 require("dotenv").config();
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
 
-const {
-  Client,
-  GatewayIntentBits,
-  Partials,
-  Events,
-  ChannelType,
-  PermissionFlagsBits,
-  MessageFlags,
-  ActionRowBuilder,
-  StringSelectMenuBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  EmbedBuilder,
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
-  ActivityType
-} = require("discord.js");
+const app = express();
+app.get('/api/server/online', async (req, res) => {
+    try {
+        const response = await fetch('http://93.95.119.135:20519/players.json');
 
-const cfg = {
-  token: process.env.DISCORD_TOKEN,
-  clientId: process.env.CLIENT_ID,
-  guildId: process.env.GUILD_ID,
+        if (!response.ok) {
+            throw new Error('FiveM server offline');
+        }
 
-  roles: {
-    owner: process.env.OWNER_ROLE_ID,
-    admin: process.env.ADMIN_ROLE_ID,
-    mod: process.env.MOD_ROLE_ID,
-    staff: process.env.STAFF_ROLE_ID || process.env.ADMIN_ROLE_ID,
-    verify: process.env.VERIFY_ROLE_ID,
-    verified: process.env.VERIFIED_ROLE_ID
-  },
+        const players = await response.json();
 
-  channels: {
-    welcome: process.env.WELCOME_CHANNEL_ID,
-    logs: process.env.LOG_CHANNEL_ID,
-    verification: process.env.VERIFICATION_CHANNEL_ID,
-    ticketCategory: process.env.TICKET_CATEGORY_ID
-  },
-
-  shop: {
-    apiUrl: String(process.env.SIDERP_API_URL || "").replace(/\/+$/, ""),
-    apiSecret: process.env.SIDERP_API_SECRET || "",
-    ticketCategory: process.env.SHOP_TICKET_CATEGORY_ID || process.env.TICKET_CATEGORY_ID,
-    staffRole: process.env.SHOP_STAFF_ROLE_ID || process.env.STAFF_ROLE_ID || process.env.ADMIN_ROLE_ID
-  },
-
-  fivem: {
-    url: process.env.FIVEM_SERVER_URL,
-    max: Number(process.env.FIVEM_MAX_PLAYERS || 64),
-    interval: Number(process.env.FIVEM_STATUS_INTERVAL_SECONDS || 60)
-  }
-};
-
-if (!cfg.token) {
-  console.error("❌ Brak DISCORD_TOKEN w .env");
-  process.exit(1);
-}
-
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
-  ],
-  partials: [Partials.Channel]
+        res.json({
+            online: Array.isArray(players) ? players.length : 0
+        });
+    } catch (error) {
+        res.json({
+            online: 0
+        });
+    }
 });
+app.disable("x-powered-by");
+app.set("trust proxy", 1);
 
-const spam = new Map();
+const PORT = Number(process.env.PORT || 37033);
+const BASE_URL = (process.env.BASE_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
+const CLIENT_ID = process.env.DISCORD_CLIENT_ID || "";
+const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || "";
+const GUILD_ID = process.env.DISCORD_GUILD_ID || "";
+const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || "";
+const REVIEWER_ROLE_IDS = new Set(
+  (process.env.REVIEWER_ROLE_IDS || "").split(",").map(s => s.trim()).filter(Boolean)
+);
 
-function hasStaff(member) {
-  return Boolean(
-    member?.permissions?.has(PermissionFlagsBits.ManageChannels) ||
-    (cfg.roles.owner && member?.roles?.cache?.has(cfg.roles.owner)) ||
-    (cfg.roles.admin && member?.roles?.cache?.has(cfg.roles.admin)) ||
-    (cfg.roles.mod && member?.roles?.cache?.has(cfg.roles.mod)) ||
-    (cfg.roles.staff && member?.roles?.cache?.has(cfg.roles.staff))
-  );
-}
+// Administracja może widzieć wszystkie podania.
+// Możesz wkleić jedno ID w ADMIN_ROLE_ID albo kilka w ADMIN_ROLE_IDS.
+const ADMIN_ROLE_IDS = new Set(
+  [process.env.ADMIN_ROLE_ID || "", ...(process.env.ADMIN_ROLE_IDS || "").split(",")]
+    .map(s => s.trim())
+    .filter(Boolean)
+);
 
-function isTicket(channel) {
-  return Boolean(channel?.topic?.includes("siderp-ticket:"));
-}
-
-function getTicketOwner(channel) {
-  const m = channel?.topic?.match(/siderp-ticket:(\d+)/);
-  return m?.[1] || null;
-}
-
-function getTicketType(channel) {
-  const m = channel?.topic?.match(/ticket-type:([a-z0-9_-]+)/);
-  return m?.[1] || "inne";
-}
-
-async function log(guild, text) {
-  if (!cfg.channels.logs) return;
-  const ch = await guild.channels.fetch(cfg.channels.logs).catch(() => null);
-  if (ch?.isTextBased()) await ch.send(text).catch(() => {});
-}
-
-async function getRole(guild, id) {
-  if (!id) return null;
-  return guild.roles.fetch(id).catch(() => null);
-}
-
-const TICKET_TYPES = {
-  administracja: ["Sprawa Do Administracji", "Tutaj kieruj pytania spoza reszty kategorii.", "❓", "administracja"],
-  skargi_administracja: ["Skargi Na Administrację", "Tutaj złóż skargę na członka ekipy serwera.", "🛡️", "skargi-administracja"],
-  zakup: ["Problemy Z Zakupem", "Tutaj kieruj wszystkie problemy z zakupami i płatnościami.", "🛒", "problemy-z-zakupem"],
-  apelacje: ["Apele Od Banów", "Tutaj kieruj apelacje od banów, włącznie z AC.", "❗", "apelacje"],
-  skargi_gracze: ["Skargi Na Graczy", "Tutaj zgłoś zachowanie innych graczy.", "🚫", "skargi-gracze"],
-  przeniesienie: ["Przeniesienie Postaci", "Tutaj złożysz formularz o przeniesienie postaci na inne konto.", "🧑‍💼", "przeniesienie"],
-  bledy: ["Błędy", "Tutaj zgłoś wszelkie błędy napotkane na serwerze.", "🛠️", "bledy"]
+// Prosta konfiguracja: w .env wklejasz tylko ID roli przy każdej frakcji.
+// Dzięki temu nie musisz pamiętać żadnego formatu typu faction:role.
+const ROLE_BY_FACTION = {
+  lssd: process.env.ROLE_LSSD_ID || "",
+  lspd: process.env.ROLE_LSPD_ID || "",
+  ems: process.env.ROLE_EMS_ID || "",
+  lsc: process.env.ROLE_LSC_ID || "",
+  exotic: process.env.ROLE_EXOTIC_ID || "",
+  doj: process.env.ROLE_DOJ_ID || "",
+  crime: process.env.ROLE_CRIME_ID || "",
+  ped: process.env.ROLE_PED_ID || ""
 };
 
-function shopTicketPanel() {
-  const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId("shop_create_ticket")
-      .setLabel("Utwórz Ticket Zakupowy")
-      .setEmoji("🛒")
-      .setStyle(ButtonStyle.Primary)
-  );
-  return row;
+
+const FACTION_REVIEWER_ROLE_IDS = new Map(
+  Object.entries(ROLE_BY_FACTION).filter(([, roleId]) => roleId).map(([faction, roleId]) => [faction, roleId])
+);
+const COOKIE_SECRET = process.env.COOKIE_SECRET || "";
+
+const SITE_DIR = __dirname;
+const DATA_DIR = path.join(__dirname, "data");
+const APPLICATIONS_FILE = path.join(DATA_DIR, "applications.json");
+const ORDERS_FILE = path.join(DATA_DIR, "orders.json");
+const SHOP_DISCORD_URL = process.env.SHOP_DISCORD_URL || "https://discord.gg/Sideroleplay";
+
+fs.mkdirSync(DATA_DIR, { recursive: true });
+if (!fs.existsSync(APPLICATIONS_FILE)) fs.writeFileSync(APPLICATIONS_FILE, "[]", "utf8");
+if (!fs.existsSync(ORDERS_FILE)) fs.writeFileSync(ORDERS_FILE, "[]", "utf8");
+
+app.use(express.json({ limit: "64kb" }));
+app.use(express.urlencoded({ extended: false }));
+
+function requiredConfig() {
+  const missing = [];
+  if (!CLIENT_ID) missing.push("DISCORD_CLIENT_ID");
+  if (!CLIENT_SECRET) missing.push("DISCORD_CLIENT_SECRET");
+  if (!COOKIE_SECRET) missing.push("COOKIE_SECRET");
+  return missing;
 }
 
-function shopOrderModal() {
-  const input = new TextInputBuilder()
-    .setCustomId("shop_order_number")
-    .setLabel("Numer zamówienia")
-    .setPlaceholder("SR-123456")
-    .setStyle(TextInputStyle.Short)
-    .setMinLength(9)
-    .setMaxLength(9)
-    .setRequired(true);
-
-  return new ModalBuilder()
-    .setCustomId("shop_order_modal")
-    .setTitle("Ticket zakupowy")
-    .addComponents(new ActionRowBuilder().addComponents(input));
+function sign(value) {
+  return crypto.createHmac("sha256", COOKIE_SECRET).update(value).digest("base64url");
 }
 
+function makeSigned(value) {
+  return `${value}.${sign(value)}`;
+}
 
+function verifySigned(value) {
+  if (!value) return null;
+  const i = value.lastIndexOf(".");
+  if (i < 1) return null;
+  const payload = value.slice(0, i);
+  const sig = value.slice(i + 1);
+  const expected = sign(payload);
+  if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
+  return payload;
+}
 
-async function createShopTicket(i, order) {
-  const categoryId = cfg.shop.ticketCategory;
-  if (!categoryId) return i.editReply("❌ Brak SHOP_TICKET_CATEGORY_ID / TICKET_CATEGORY_ID w .env.");
-
-  const category = await i.guild.channels.fetch(categoryId).catch(() => null);
-  if (!category || category.type !== ChannelType.GuildCategory) {
-    return i.editReply("❌ SHOP_TICKET_CATEGORY_ID nie wskazuje na kategorię kanałów.");
-  }
-
-  const existing = i.guild.channels.cache.find(
-    ch => ch.parentId === category.id && ch.topic?.includes(`shop-order:${order.number}`)
+function setCookie(res, name, value, maxAge) {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  res.setHeader("Set-Cookie",
+    `${name}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure}`
   );
-  if (existing) return i.editReply(`❌ Ticket dla zamówienia **${order.number}** już istnieje: ${existing}`);
+}
 
-  const staffRole = await getRole(i.guild, cfg.shop.staffRole);
-  const botMember = await i.guild.members.fetchMe();
+function clearCookie(res, name) {
+  res.setHeader("Set-Cookie", `${name}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`);
+}
 
-  const overwrites = [
-    { id: i.guild.roles.everyone.id, deny: [PermissionFlagsBits.ViewChannel] },
-    { id: i.user.id, allow: [
-      PermissionFlagsBits.ViewChannel,
-      PermissionFlagsBits.SendMessages,
-      PermissionFlagsBits.ReadMessageHistory,
-      PermissionFlagsBits.AttachFiles,
-      PermissionFlagsBits.EmbedLinks
-    ]},
-    { id: botMember.id, allow: [
-      PermissionFlagsBits.ViewChannel,
-      PermissionFlagsBits.SendMessages,
-      PermissionFlagsBits.ReadMessageHistory,
-      PermissionFlagsBits.ManageChannels,
-      PermissionFlagsBits.ManageMessages
-    ]}
-  ];
+function getCookie(req, name) {
+  const raw = req.headers.cookie || "";
+  const part = raw.split(";").map(x => x.trim()).find(x => x.startsWith(name + "="));
+  return part ? decodeURIComponent(part.slice(name.length + 1)) : null;
+}
 
-  if (staffRole) {
-    overwrites.push({ id: staffRole.id, allow: [
-      PermissionFlagsBits.ViewChannel,
-      PermissionFlagsBits.SendMessages,
-      PermissionFlagsBits.ReadMessageHistory,
-      PermissionFlagsBits.AttachFiles,
-      PermissionFlagsBits.EmbedLinks
-    ]});
+function getUser(req) {
+  const signed = verifySigned(getCookie(req, "siderp_session"));
+  if (!signed) return null;
+  try {
+    const user = JSON.parse(Buffer.from(signed, "base64url").toString("utf8"));
+    if (!user.id) return null;
+    return user;
+  } catch {
+    return null;
   }
+}
 
-  const safe = order.number.toLowerCase().replace(/[^a-z0-9-]/g, "");
-  const username = i.user.username.toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 20) || "user";
-  const channel = await i.guild.channels.create({
-    name: `zakup-${safe}-${username}`.slice(0, 95),
-    type: ChannelType.GuildText,
-    parent: category.id,
-    topic: `siderp-ticket:${i.user.id} | shop-order:${order.number} | shop-order-id:${order.id}`,
-    permissionOverwrites: overwrites
+function requireAuth(req, res, next) {
+  const user = getUser(req);
+  if (!user) return res.status(401).json({ success: false, error: "Musisz zalogować się przez Discord." });
+  req.user = user;
+  next();
+}
+
+async function discordTokenExchange(code) {
+  const body = new URLSearchParams({
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET,
+    grant_type: "authorization_code",
+    code,
+    redirect_uri: `${BASE_URL}/auth/callback`
   });
 
-  const statusLabels = {
-    awaiting_payment: "Oczekuje na płatność",
-    paid: "Opłacone",
-    fulfilled: "Zrealizowane",
-    rejected: "Odrzucone"
+  const r = await fetch("https://discord.com/api/v10/oauth2/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body
+  });
+  if (!r.ok) throw new Error(`Discord token exchange failed: ${r.status}`);
+  return r.json();
+}
+
+async function discordUser(accessToken) {
+  const r = await fetch("https://discord.com/api/v10/users/@me", {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  });
+  if (!r.ok) throw new Error(`Discord user request failed: ${r.status}`);
+  return r.json();
+}
+
+async function discordMember(userId) {
+  if (!GUILD_ID || !BOT_TOKEN) return null;
+  try {
+    const r = await fetch(
+      `https://discord.com/api/v10/guilds/${encodeURIComponent(GUILD_ID)}/members/${encodeURIComponent(userId)}`,
+      { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+    );
+    if (!r.ok) return null;
+    return await r.json();
+  } catch {
+    return null;
+  }
+}
+
+async function accessForUser(userId) {
+  const member = await discordMember(userId);
+  const roles = member && Array.isArray(member.roles) ? member.roles : [];
+  const isAdmin = roles.some(role => ADMIN_ROLE_IDS.has(role) || REVIEWER_ROLE_IDS.has(role));
+  const factions = [];
+  for (const [faction, roleId] of FACTION_REVIEWER_ROLE_IDS.entries()) {
+    if (roles.includes(roleId)) factions.push(faction);
+  }
+  return { isAdmin, factions, roles };
+}
+
+async function reviewerStatus(userId) {
+  const access = await accessForUser(userId);
+  return access.isAdmin || access.factions.length > 0;
+}
+
+async function requireReviewer(req, res, next) {
+  const user = getUser(req);
+  if (!user) return res.status(401).json({ success: false, error: "Musisz zalogować się przez Discord." });
+  const access = await accessForUser(user.id);
+  if (!access.isAdmin && access.factions.length === 0) {
+    return res.status(403).json({ success: false, error: "Nie masz uprawnień opiekuna frakcji." });
+  }
+  req.user = user;
+  req.access = access;
+  next();
+}
+
+function readApplications() {
+  try {
+    return JSON.parse(fs.readFileSync(APPLICATIONS_FILE, "utf8"));
+  } catch {
+    return [];
+  }
+}
+
+function writeApplications(apps) {
+  const tmp = APPLICATIONS_FILE + ".tmp";
+  fs.writeFileSync(tmp, JSON.stringify(apps, null, 2), "utf8");
+  fs.renameSync(tmp, APPLICATIONS_FILE);
+}
+
+function readOrders() {
+  try { return JSON.parse(fs.readFileSync(ORDERS_FILE, "utf8")); } catch { return []; }
+}
+function writeOrders(orders) {
+  const tmp = ORDERS_FILE + ".tmp";
+  fs.writeFileSync(tmp, JSON.stringify(orders, null, 2), "utf8");
+  fs.renameSync(tmp, ORDERS_FILE);
+}
+function makeOrderNumber(orders) {
+  let number; do { number = `SR-${Math.floor(100000 + Math.random() * 900000)}`; } while (orders.some(o => o.number === number)); return number;
+}
+
+// OAuth2
+app.get("/auth/login", (req, res) => {
+  const missing = requiredConfig();
+  if (missing.length) return res.status(500).send(`Brak konfiguracji serwera: ${missing.join(", ")}`);
+
+  const state = crypto.randomBytes(32).toString("base64url");
+  setCookie(res, "siderp_oauth_state", makeSigned(state), 600);
+
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID,
+    redirect_uri: `${BASE_URL}/auth/callback`,
+    response_type: "code",
+    scope: "identify",
+    state
+  });
+
+  res.redirect(`https://discord.com/oauth2/authorize?${params.toString()}`);
+});
+
+app.get("/auth/callback", async (req, res) => {
+  try {
+    const stateCookie = verifySigned(getCookie(req, "siderp_oauth_state"));
+    clearCookie(res, "siderp_oauth_state");
+
+    if (!stateCookie || !req.query.state || !crypto.timingSafeEqual(
+      Buffer.from(stateCookie), Buffer.from(String(req.query.state))
+    )) {
+      return res.status(400).send("Nieprawidłowy OAuth state.");
+    }
+
+    if (!req.query.code) return res.status(400).send("Brak kodu OAuth.");
+
+    const token = await discordTokenExchange(String(req.query.code));
+    const dUser = await discordUser(token.access_token);
+
+    const user = {
+      id: dUser.id,
+      username: dUser.username,
+      globalName: dUser.global_name || dUser.username,
+      avatar: dUser.avatar
+        ? `https://cdn.discordapp.com/avatars/${dUser.id}/${dUser.avatar}.png?size=128`
+        : `https://cdn.discordapp.com/embed/avatars/${Number(dUser.discriminator || 0) % 5}.png`
+    };
+
+    setCookie(
+      res,
+      "siderp_session",
+      makeSigned(Buffer.from(JSON.stringify(user)).toString("base64url")),
+      60 * 60 * 24 * 7
+    );
+
+    res.redirect("/podania.html");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Logowanie przez Discord nie powiodło się.");
+  }
+});
+
+app.get("/auth/logout", (req, res) => {
+  clearCookie(res, "siderp_session");
+  res.redirect("/");
+});
+
+// Auth API
+app.get("/api/me", async (req, res) => {
+  const user = getUser(req);
+  if (!user) return res.json({ loggedIn: false });
+
+  const access = await accessForUser(user.id);
+  res.json({
+    loggedIn: true,
+    user,
+    isReviewer: access.isAdmin || access.factions.length > 0,
+    isAdmin: access.isAdmin,
+    reviewerFactions: access.factions
+  });
+});
+
+// Static factions — no external factions API/database needed.
+const FACTIONS = {
+  lssd: { name: "Los Santos Sheriff Department", icon: "fa-solid fa-star" },
+  lspd: { name: "Los Santos Police Department", icon: "fa-solid fa-handcuffs" },
+  ems: { name: "Emergency Medical Services", icon: "fa-solid fa-truck-medical" },
+  lsc: { name: "Los Santos Customs", icon: "fa-solid fa-wrench" },
+  exotic: { name: "Exotic Customs", icon: "fa-solid fa-screwdriver-wrench" },
+  doj: { name: "Department of Justice", icon: "fa-solid fa-building-columns" },
+  crime: { name: "Organizacja Przestępcza", icon: "fa-solid fa-crown" },
+  opiekun: { name: "Opiekun Crime", icon: "fa-solid fa-user-secret" },
+  administracja: { name: "Administracja", icon: "fa-solid fa-user-shield" },
+  ped: { name: "Ped", icon: "fa-solid fa-user" }
+};
+
+app.get("/api/factions", (req, res) => {
+  res.json(FACTIONS);
+});
+
+// Application API
+app.get("/api/my-applications", requireAuth, (req, res) => {
+  const apps = readApplications()
+    .filter(a => a.discordId === req.user.id)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  res.json(apps);
+});
+
+app.post("/api/applications", requireAuth, (req, res) => {
+  const { faction, ...answers } = req.body || {};
+  if (!faction || typeof faction !== "string") {
+    return res.status(400).json({ success: false, error: "Nie wybrano frakcji." });
+  }
+
+  const apps = readApplications();
+  const application = {
+    id: crypto.randomUUID(),
+    discordId: req.user.id,
+    username: req.user.globalName || req.user.username,
+    faction,
+    answers,
+    status: "pending",
+    createdAt: new Date().toISOString()
   };
 
-  const embed = new EmbedBuilder()
-    .setColor(0x39ff88)
-    .setTitle("🛒 Ticket Zakupowy — SideRP")
-    .setDescription(
-      `Witaj ${i.user}!\n\n` +
-      `**Numer zamówienia:** \`${order.number}\`\n` +
-      `**Produkt:** ${order.product}\n` +
-      `**Cena:** ${order.price}\n` +
-      `**Status:** ${statusLabels[order.status] || order.status}\n\n` +
-      `Podaj tutaj ewentualne informacje dotyczące zamówienia. Administracja zajmie się jego realizacją.\n\n` +
-      `🔒 **Zamknij Ticket** — zamyka ticket.\n` +
-      `🙌 **Claim** — administracja przejmuje ticket.`
-    )
-    .setFooter({ text: "SideRP • Obsługa zakupów" })
-    .setTimestamp();
+  apps.push(application);
+  writeApplications(apps);
+  res.json({ success: true, application: { id: application.id, status: application.status } });
+});
 
-  await channel.send({ content: `${i.user}`, embeds: [embed], components: [ticketButtons()] });
-  await log(i.guild, `🛒 Ticket zakupowy utworzony: ${channel} • ${i.user.tag} • ${order.number} • ${order.product}`);
-  return i.editReply(`✅ Utworzono ticket zakupowy ${channel}\n🧾 Zamówienie: **${order.number}**`);
-}
+// Shop orders — manualne płatności przez Discord.
+app.get("/api/my-orders", requireAuth, (req, res) => {
+  const orders = readOrders().filter(o => o.discordId === req.user.id).sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt));
+  res.json({ success:true, orders, shopDiscordUrl: SHOP_DISCORD_URL });
+});
 
-function ticketPanel() {
-  const menu = new StringSelectMenuBuilder()
-    .setCustomId("ticket_select")
-    .setPlaceholder("🎫 Wybierz dział")
-    .addOptions(Object.entries(TICKET_TYPES).map(([value, [label, desc, emoji]]) => ({
-      label,
-      value,
-      description: desc.slice(0, 100),
-      emoji
-    })));
+// Publiczny feed ostatnich opłaconych/zrealizowanych zakupów.
+// Nie zwracamy Discord ID ani innych prywatnych danych.
+app.get("/api/shop/recent", (req, res) => {
+  const orders = readOrders()
+    .filter(o => o.status === "paid" || o.status === "fulfilled")
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 6)
+    .map(o => ({
+      id: o.id,
+      username: o.username || "Gracz",
+      product: o.product || "Zakup",
+      createdAt: o.createdAt,
+      status: o.status
+    }));
 
-  return new ActionRowBuilder().addComponents(menu);
-}
+  res.json({ success: true, orders });
+});
 
-function ticketButtons() {
-  return new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId("ticket_close").setLabel("Zamknij Ticket").setEmoji("🔒").setStyle(ButtonStyle.Danger),
-    new ButtonBuilder().setCustomId("ticket_claim").setLabel("Claim").setEmoji("🙌").setStyle(ButtonStyle.Success)
-  );
-}
-
-async function createTicket(i, type) {
-  const selected = TICKET_TYPES[type];
-  if (!selected) return i.reply({ content: "Nieprawidłowy dział.", flags: MessageFlags.Ephemeral });
-
-  if (!cfg.channels.ticketCategory) {
-    return i.reply({ content: "❌ Brak TICKET_CATEGORY_ID w .env.", flags: MessageFlags.Ephemeral });
-  }
-
-  await i.deferReply({ flags: MessageFlags.Ephemeral });
-
-  const category = await i.guild.channels.fetch(cfg.channels.ticketCategory).catch(() => null);
-  if (!category || category.type !== ChannelType.GuildCategory) {
-    return i.editReply("❌ TICKET_CATEGORY_ID nie wskazuje na kategorię kanałów.");
-  }
-
-  const existing = i.guild.channels.cache.find(
-    ch => ch.parentId === category.id && isTicket(ch) && getTicketOwner(ch) === i.user.id
-  );
-
-  if (existing) return i.editReply(`❌ Masz już otwarty ticket: ${existing}`);
-
-  // Pobieramy role z API zamiast przekazywać nieistniejące/niezcache'owane obiekty.
-  const staffRole = await getRole(i.guild, cfg.roles.staff);
-  const botMember = await i.guild.members.fetchMe();
-
-  const overwrites = [
-    {
-      id: i.guild.roles.everyone.id,
-      deny: [PermissionFlagsBits.ViewChannel]
-    },
-    {
-      id: i.user.id,
-      allow: [
-        PermissionFlagsBits.ViewChannel,
-        PermissionFlagsBits.SendMessages,
-        PermissionFlagsBits.ReadMessageHistory,
-        PermissionFlagsBits.AttachFiles,
-        PermissionFlagsBits.EmbedLinks
-      ]
-    },
-    {
-      id: botMember.id,
-      allow: [
-        PermissionFlagsBits.ViewChannel,
-        PermissionFlagsBits.SendMessages,
-        PermissionFlagsBits.ReadMessageHistory,
-        PermissionFlagsBits.ManageChannels,
-        PermissionFlagsBits.ManageMessages
-      ]
-    }
-  ];
-
-  if (staffRole) {
-    overwrites.push({
-      id: staffRole.id,
-      allow: [
-        PermissionFlagsBits.ViewChannel,
-        PermissionFlagsBits.SendMessages,
-        PermissionFlagsBits.ReadMessageHistory,
-        PermissionFlagsBits.AttachFiles,
-        PermissionFlagsBits.EmbedLinks
-      ]
-    });
-  } else if (cfg.roles.staff) {
-    console.warn(`⚠️ Nie znaleziono STAFF_ROLE_ID: ${cfg.roles.staff}`);
-  }
-
-  const safeName = i.user.username.toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 25) || "user";
-  const channel = await i.guild.channels.create({
-    name: `${selected[3]}-${safeName}`.slice(0, 95),
-    type: ChannelType.GuildText,
-    parent: category.id,
-    topic: `siderp-ticket:${i.user.id} | ticket-type:${type}`,
-    permissionOverwrites: overwrites
-  });
-
-  const embed = new EmbedBuilder()
-    .setColor(0x39ff88)
-    .setTitle(`${selected[2]} ${selected[0]}`)
-    .setDescription(
-      `Witaj ${i.user}!\n\n` +
-      `**Kategoria:** ${selected[0]}\n` +
-      `> ${selected[1]}\n\n` +
-      `Opisz dokładnie swoją sprawę. Administracja odpowie tak szybko, jak będzie to możliwe.\n\n` +
-      `🔒 **Zamknij Ticket** — zamyka ticket.\n` +
-      `🙌 **Claim** — członek administracji przejmuje ticket.`
-    )
-    .setFooter({ text: "SideRP • Centrum pomocy" })
-    .setTimestamp();
-
-  await channel.send({
-    content: `${i.user}`,
-    embeds: [embed],
-    components: [ticketButtons()]
-  });
-
-  await log(i.guild, `🎫 Ticket utworzony: ${channel} • ${i.user.tag} • ${selected[0]}`);
-  return i.editReply(`✅ Utworzono ticket ${channel}`);
-}
-
-async function updateFiveMStatus() {
-  if (!client.user || !cfg.fivem.url) return;
+app.get("/api/server-status", async (req, res) => {
+  const base = String(process.env.FIVEM_SERVER_URL || "").replace(/\/$/, "");
+  if (!base) return res.json({ online: false, players: 0 });
 
   try {
-    const base = cfg.fivem.url.replace(/\/+$/, "");
     const response = await fetch(`${base}/players.json`, {
-      headers: { "User-Agent": "SideRP-Discord-Bot/4.0" }
+      signal: AbortSignal.timeout(2500),
+      headers: { "User-Agent": "SideRP-Shop/1.0" }
     });
-
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
+    if (!response.ok) return res.json({ online: false, players: 0 });
     const players = await response.json();
-    const count = Array.isArray(players) ? players.length : 0;
+    res.json({ online: true, players: Array.isArray(players) ? players.length : 0 });
+  } catch {
+    res.json({ online: false, players: 0 });
+  }
+});
 
-    client.user.setPresence({
-      activities: [{ name: `${count}/${cfg.fivem.max} graczy na SideRP`, type: ActivityType.Watching }],
-      status: "online"
+app.post("/api/orders", requireAuth, (req, res) => {
+  const product = String(req.body?.product || "").trim().slice(0,160);
+  const price = String(req.body?.price || "").trim().slice(0,40);
+  if (!product || !price) return res.status(400).json({success:false,error:"Brak produktu lub ceny."});
+  const orders = readOrders();
+  const order = { id:crypto.randomUUID(), number:makeOrderNumber(orders), discordId:req.user.id, username:req.user.globalName || req.user.username, product, price, status:"awaiting_payment", createdAt:new Date().toISOString(), paidAt:null, fulfilledAt:null, reviewedBy:null, note:"" };
+  orders.push(order); writeOrders(orders);
+  res.json({success:true, order, shopDiscordUrl:SHOP_DISCORD_URL});
+});
+
+app.get("/api/reviewer/orders", requireReviewer, (req,res) => {
+  if (!req.access.isAdmin) return res.status(403).json({success:false,error:"Tylko administrator może zarządzać zamówieniami sklepu."});
+  res.json({success:true,orders:readOrders().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))});
+});
+
+app.patch("/api/reviewer/orders/:id", requireReviewer, (req,res) => {
+  if (!req.access.isAdmin) return res.status(403).json({success:false,error:"Tylko administrator może zarządzać zamówieniami sklepu."});
+  const orders=readOrders(); const order=orders.find(o=>o.id===req.params.id);
+  if(!order) return res.status(404).json({success:false,error:"Nie znaleziono zamówienia."});
+  const status=String(req.body?.status||"").toLowerCase();
+  if(!["awaiting_payment","paid","fulfilled","rejected"].includes(status)) return res.status(400).json({success:false,error:"Nieprawidłowy status zamówienia."});
+  order.status=status; order.note=typeof req.body?.note==="string"?req.body.note.slice(0,1000):order.note||"";
+  order.reviewedBy={id:req.user.id,username:req.user.globalName||req.user.username};
+  if(status==="paid"&&!order.paidAt) order.paidAt=new Date().toISOString();
+  if(status==="fulfilled"&&!order.fulfilledAt) order.fulfilledAt=new Date().toISOString();
+  writeOrders(orders); res.json({success:true,order});
+});
+
+// =====================================================
+// DISCORD BOT - SHOP ORDER API
+// =====================================================
+
+app.get("/api/bot/orders/:number", async (req, res) => {
+
+  const configuredSecret =
+    String(process.env.SIDERP_API_SECRET || "");
+
+  const auth =
+    String(req.headers.authorization || "");
+
+  const suppliedSecret =
+    auth.startsWith("Bearer ")
+      ? auth.slice(7)
+      : "";
+
+  if (!configuredSecret) {
+    return res.status(500).json({
+      success: false,
+      error: "Brak SIDERP_API_SECRET na stronie."
     });
-  } catch (err) {
-    client.user.setPresence({
-      activities: [{ name: "SideRP • serwer offline", type: ActivityType.Watching }],
-      status: "idle"
+  }
+
+  if (suppliedSecret !== configuredSecret) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized"
     });
-    console.warn(`⚠️ FiveM: ${err.message}`);
   }
-}
 
-client.once(Events.ClientReady, async c => {
-  console.log(`✅ SideRP Bot online jako ${c.user.tag}`);
-  await updateFiveMStatus();
-  setInterval(updateFiveMStatus, Math.max(cfg.fivem.interval, 15) * 1000);
+  const number =
+    String(req.params.number || "")
+      .trim()
+      .toUpperCase();
+
+  if (!/^SR-\d{6}$/.test(number)) {
+    return res.status(400).json({
+      success: false,
+      error: "Nieprawidłowy numer zamówienia."
+    });
+  }
+
+  const orders = readOrders();
+
+  const order = orders.find(
+    o =>
+      String(o.number || "").toUpperCase() === number
+  );
+
+  if (!order) {
+    return res.status(404).json({
+      success: false,
+      error: "Nie znaleziono zamówienia."
+    });
+  }
+
+  return res.json({
+    success: true,
+    order: {
+      id: order.id,
+      number: order.number,
+      discordId: order.discordId,
+      username: order.username,
+      product: order.product,
+      price: order.price,
+      status: order.status,
+      createdAt: order.createdAt,
+      paidAt: order.paidAt || null,
+      fulfilledAt: order.fulfilledAt || null,
+      note: order.note || ""
+    }
+  });
+
 });
 
-client.on(Events.GuildMemberAdd, async member => {
-  if (cfg.roles.verify) {
-    const role = await getRole(member.guild, cfg.roles.verify);
-    if (role) await member.roles.add(role).catch(err => console.warn("VERIFY:", err.message));
+// Faction reviewer / management API.
+app.get("/api/reviewer/applications", requireReviewer, (req, res) => {
+  let apps = readApplications();
+
+  if (!req.access.isAdmin) {
+    apps = apps.filter(a => req.access.factions.includes(a.faction));
   }
 
-  if (cfg.channels.welcome) {
-    const channel = await member.guild.channels.fetch(cfg.channels.welcome).catch(() => null);
-    if (channel?.isTextBased()) {
-      const number = member.guild.memberCount;
-      const embed = new EmbedBuilder()
-        .setColor(0x39ff88)
-        .setTitle("Witamy na SideRP")
-        .setDescription(
-          `Witamy ${member} na **SideRP**!\n\n` +
-          `Twoja przygoda właśnie się zaczyna!\n\n` +
-          `Jesteś naszym: **#${number}** graczem. Złap wiatr w żagle i daj się ponieść zabawie!`
-        )
-        .setThumbnail(member.user.displayAvatarURL())
-        .setTimestamp();
-      await channel.send({ embeds: [embed] }).catch(() => {});
+  apps.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  res.json({
+    success: true,
+    applications: apps,
+    access: {
+      isAdmin: req.access.isAdmin,
+      factions: req.access.factions
     }
-  }
-
-  await log(member.guild, `👋 Dołączył ${member.user.tag} (${member.id})`);
+  });
 });
 
-client.on(Events.MessageCreate, async message => {
-  if (!message.guild || message.author.bot) return;
+app.patch("/api/reviewer/applications/:id", requireReviewer, (req, res) => {
+  const apps = readApplications();
+  const application = apps.find(a => a.id === req.params.id);
+  if (!application) return res.status(404).json({ success: false, error: "Nie znaleziono podania." });
 
-  if (process.env.ANTILINK_ENABLED === "true") {
-    const link = /(https?:\/\/|www\.|discord\.gg\/|discord\.com\/invite\/)/i.test(message.content);
-    const allowed = cfg.channels.verification && message.channel.id === cfg.channels.verification;
-    if (link && !allowed && !hasStaff(message.member)) {
-      await message.delete().catch(() => {});
-      await message.channel.send({ content: `${message.author}, linki nie są tutaj dozwolone.` })
-        .then(m => setTimeout(() => m.delete().catch(() => {}), 4000))
-        .catch(() => {});
-      if (process.env.ANTILINK_MUTE === "true") {
-        await message.member.timeout(Number(process.env.ANTILINK_MUTE_MINUTES || 10) * 60000, "Anti-link").catch(() => {});
-      }
-      return;
-    }
+  const canReview = req.access.isAdmin || req.access.factions.includes(application.faction);
+  if (!canReview) return res.status(403).json({ success: false, error: "Nie masz dostępu do tej frakcji." });
+
+  const status = String(req.body?.status || "").toLowerCase();
+  if (!['pending', 'accepted', 'rejected'].includes(status)) {
+    return res.status(400).json({ success: false, error: "Nieprawidłowy status." });
   }
 
-  if (process.env.ANTISPAM_ENABLED === "true" && !hasStaff(message.member)) {
-    const now = Date.now();
-    const windowMs = Number(process.env.ANTISPAM_WINDOW_SECONDS || 8) * 1000;
-    const max = Number(process.env.ANTISPAM_MAX_MESSAGES || 6);
-    const list = spam.get(message.author.id) || [];
-    list.push(now);
-    const recent = list.filter(t => now - t <= windowMs);
-    spam.set(message.author.id, recent);
+  application.status = status;
+  application.reviewedAt = new Date().toISOString();
+  application.reviewedBy = {
+    id: req.user.id,
+    username: req.user.globalName || req.user.username
+  };
+  application.reviewNote = typeof req.body?.note === "string" ? req.body.note.slice(0, 2000) : "";
 
-    if (recent.length >= max) {
-      spam.set(message.author.id, []);
-      await message.member.timeout(Number(process.env.ANTISPAM_MUTE_MINUTES || 5) * 60000, "Anti-spam").catch(() => {});
-      await log(message.guild, `🛡️ Anti-spam: wyciszono ${message.author.tag}`);
-    }
-  }
+  writeApplications(apps);
+  res.json({ success: true, application });
 });
 
-client.on(Events.InteractionCreate, async i => {
-  try {
-    if (i.isChatInputCommand()) {
-      if (i.commandName === "ticket-panel") {
-        if (!hasStaff(i.member)) return i.reply({ content: "Brak uprawnień.", flags: MessageFlags.Ephemeral });
+// Profil gracza działa lokalnie — bez połączenia z FiveM/ESX.
+app.get("/api/player/data", requireAuth, (req, res) => {
+  const apps = readApplications()
+    .filter(a => a.discordId === req.user.id)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-        const embed = new EmbedBuilder()
-          .setColor(0x39ff88)
-          .setTitle("🎫 Centrum pomocy SideRP")
-          .setDescription(
-            "Potrzebujesz pomocy?\n\n" +
-            "Wybierz odpowiedni dział z listy poniżej, a zostanie utworzony prywatny ticket.\n\n" +
-            Object.values(TICKET_TYPES).map(v => `${v[2]} **${v[0]}**\n${v[1]}`).join("\n")
-          )
-          .setFooter({ text: "SideRP • Centrum pomocy" });
-
-        await i.channel.send({ embeds: [embed], components: [ticketPanel()] });
-        return i.reply({ content: "Panel ticketów wysłany.", flags: MessageFlags.Ephemeral });
-      }
-
-      if (i.commandName === "shop-panel") {
-        if (!hasStaff(i.member)) return i.reply({ content: "Brak uprawnień.", flags: MessageFlags.Ephemeral });
-        const embed = new EmbedBuilder()
-          .setColor(0x39ff88)
-          .setTitle("🛒 Centrum zakupów SideRP")
-          .setDescription(
-            "Masz zamówienie ze sklepu SideRP?\n\n" +
-            "Kliknij przycisk poniżej, wpisz numer zamówienia w formacie `SR-XXXXXX`, a bot automatycznie utworzy prywatny ticket zakupowy.\n\n" +
-            "W tickecie administracja zobaczy produkt, cenę i aktualny status zamówienia."
-          )
-          .setFooter({ text: "SideRP • Obsługa zakupów" });
-        await i.channel.send({ embeds: [embed], components: [shopTicketPanel()] });
-        return i.reply({ content: "Panel zakupowy wysłany.", flags: MessageFlags.Ephemeral });
-      }
-
-      if (i.commandName === "verify-panel") {
-        if (!hasStaff(i.member)) return i.reply({ content: "Brak uprawnień.", flags: MessageFlags.Ephemeral });
-
-        const embed = new EmbedBuilder()
-          .setColor(0x39ff88)
-          .setTitle("🔐 Weryfikacja SideRP")
-          .setDescription("Kliknij przycisk poniżej, aby się zweryfikować i otrzymać dostęp do serwera.");
-
-        const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId("verify").setLabel("Zweryfikuj się").setEmoji("✅").setStyle(ButtonStyle.Success)
-        );
-
-        await i.channel.send({ embeds: [embed], components: [row] });
-        return i.reply({ content: "Panel weryfikacji wysłany.", flags: MessageFlags.Ephemeral });
-      }
-      return;
-    }
-
-    if (i.isStringSelectMenu() && i.customId === "ticket_select") {
-      if (i.values[0] === "zakup") return i.showModal(shopOrderModal());
-      return createTicket(i, i.values[0]);
-    }
-
-    if (i.isModalSubmit() && i.customId === "shop_order_modal") {
-      await i.deferReply({ flags: MessageFlags.Ephemeral });
-      const number = i.fields.getTextInputValue("shop_order_number").trim().toUpperCase();
-      if (!/^SR-\d{6}$/.test(number)) return i.editReply("❌ Nieprawidłowy numer. Użyj formatu `SR-123456`.");
-      try {
-        const order = await fetchShopOrder(number);
-        if (String(order.discordId) !== String(i.user.id)) {
-          return i.editReply("❌ To zamówienie nie należy do Twojego konta Discord.");
-        }
-        return createShopTicket(i, order);
-      } catch (err) {
-        console.error("SHOP ORDER ERROR", err);
-        return i.editReply(`❌ Nie udało się znaleźć zamówienia **${number}**. Sprawdź numer i spróbuj ponownie.`);
-      }
-    }
-
-    if (i.isButton() && i.customId === "shop_create_ticket") {
-      return i.showModal(shopOrderModal());
-    }
-
-    if (!i.isButton()) return;
-
-    if (i.customId === "verify") {
-      const verifyRole = await getRole(i.guild, cfg.roles.verify);
-      const verifiedRole = await getRole(i.guild, cfg.roles.verified);
-
-      if (!verifyRole || !verifiedRole) {
-        return i.reply({ content: "❌ Sprawdź VERIFY_ROLE_ID i VERIFIED_ROLE_ID w .env.", flags: MessageFlags.Ephemeral });
-      }
-
-      await i.deferReply({ flags: MessageFlags.Ephemeral });
-      await i.member.roles.remove(verifyRole).catch(() => {});
-      await i.member.roles.add(verifiedRole);
-      await log(i.guild, `✅ Zweryfikowano ${i.user.tag}`);
-      return i.editReply("✅ Zostałeś zweryfikowany. Rola VERIFY została zabrana, a nadana została rola Zweryfikowany.");
-    }
-
-    if (!isTicket(i.channel)) {
-      return i.reply({ content: "Ten przycisk działa tylko w tickecie.", flags: MessageFlags.Ephemeral });
-    }
-
-    if (i.customId === "ticket_close") {
-      const ownerId = getTicketOwner(i.channel);
-      await i.deferReply();
-
-      if (ownerId) {
-        await i.channel.permissionOverwrites.edit(ownerId, {
-          ViewChannel: false,
-          SendMessages: false
-        }).catch(() => {});
-      }
-
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId("ticket_reopen").setLabel("Otwórz ponownie").setEmoji("🔓").setStyle(ButtonStyle.Success),
-        new ButtonBuilder().setCustomId("ticket_delete").setLabel("Usuń Ticket").setEmoji("🗑️").setStyle(ButtonStyle.Danger)
-      );
-
-      await i.editReply({
-        embeds: [new EmbedBuilder().setColor(0xffb000).setTitle("🔒 Ticket zamknięty").setDescription(`Ticket został zamknięty przez ${i.user}.`).setTimestamp()],
-        components: [row]
-      });
-      return;
-    }
-
-    if (i.customId === "ticket_reopen") {
-      if (!hasStaff(i.member)) return i.reply({ content: "❌ Tylko administracja może otworzyć ticket.", flags: MessageFlags.Ephemeral });
-
-      const ownerId = getTicketOwner(i.channel);
-      if (ownerId) {
-        await i.channel.permissionOverwrites.edit(ownerId, {
-          ViewChannel: true,
-          SendMessages: true,
-          ReadMessageHistory: true
-        }).catch(() => {});
-      }
-
-      return i.reply({
-        embeds: [new EmbedBuilder().setColor(0x39ff88).setTitle("🔓 Ticket otwarty").setDescription(`Ticket został ponownie otwarty przez ${i.user}.`).setTimestamp()],
-        components: [ticketButtons()]
-      });
-    }
-
-    if (i.customId === "ticket_claim") {
-      if (!hasStaff(i.member)) return i.reply({ content: "❌ Tylko administracja może przejąć ticket.", flags: MessageFlags.Ephemeral });
-
-      if (i.channel.topic?.includes("claimed-by:")) {
-        return i.reply({ content: "⚠️ Ten ticket został już przejęty.", flags: MessageFlags.Ephemeral });
-      }
-
-      await i.channel.setTopic(`${i.channel.topic || ""} | claimed-by:${i.user.id}`);
-      return i.reply({
-        embeds: [new EmbedBuilder().setColor(0x39ff88).setTitle("🙌 Ticket przejęty").setDescription(`Ten ticket został przejęty przez ${i.user}.`).setTimestamp()]
-      });
-    }
-
-    if (i.customId === "ticket_delete") {
-      if (!hasStaff(i.member)) return i.reply({ content: "❌ Tylko administracja może usunąć ticket.", flags: MessageFlags.Ephemeral });
-
-      await i.reply("🗑️ Ticket zostanie usunięty za **5 sekund**.");
-      setTimeout(() => i.channel.delete("Ticket usunięty przez administrację").catch(() => {}), 5000);
-      return;
-    }
-  } catch (err) {
-    console.error("INTERACTION ERROR", err);
-    if (!i.replied && !i.deferred) {
-      await i.reply({ content: "❌ Wystąpił błąd. Sprawdź konsolę bota.", flags: MessageFlags.Ephemeral }).catch(() => {});
-    } else if (i.deferred) {
-      await i.editReply("❌ Wystąpił błąd. Sprawdź konsolę bota.").catch(() => {});
-    }
-  }
+  res.json({
+    success: true,
+    user: req.user,
+    stats: {
+      total: apps.length,
+      accepted: apps.filter(a => a.status === "accepted").length,
+      pending: apps.filter(a => a.status === "pending").length,
+      rejected: apps.filter(a => a.status === "rejected").length
+    },
+    latestApplication: apps[0] || null
+  });
 });
 
-client.login(cfg.token);
+// Diagnostics for the local setup (does not expose secrets).
+app.get("/api/setup-status", async (req, res) => {
+  const user = getUser(req);
+  const config = {
+    oauthConfigured: Boolean(CLIENT_ID && CLIENT_SECRET && COOKIE_SECRET && CLIENT_SECRET !== "NOWY_CLIENT_SECRET"),
+    guildConfigured: Boolean(GUILD_ID),
+    botConfigured: Boolean(BOT_TOKEN && BOT_TOKEN !== "NOWY_TOKEN_BOTA"),
+    baseUrl: BASE_URL,
+    guildId: GUILD_ID || null
+  };
+  let access = null;
+  if (user) access = await accessForUser(user.id);
+  res.json({ success: true, config, loggedIn: Boolean(user), access: access ? { isAdmin: access.isAdmin, factions: access.factions } : null });
+});
+
+// Static website
+app.use(express.static(SITE_DIR, {
+  extensions: ["html"],
+  index: "index.html"
+}));
+
+app.get("*", (req, res) => {
+  if (req.path.startsWith("/api/") || req.path.startsWith("/auth/")) {
+    return res.status(404).json({ error: "Not found" });
+  }
+  res.sendFile(path.join(SITE_DIR, "index.html"));
+});
+
+app.listen(PORT, () => {
+  console.log(`SideRP running at ${BASE_URL}`);
+  if (!CLIENT_ID || !CLIENT_SECRET || !COOKIE_SECRET) {
+    console.warn("Uzupełnij .env przed użyciem logowania Discord.");
+  }
+  if (CLIENT_SECRET === "NOWY_CLIENT_SECRET" || BOT_TOKEN === "NOWY_TOKEN_BOTA") {
+    console.warn("Uwaga: w .env są jeszcze przykładowe wartości sekretów Discord.");
+  }
+});
