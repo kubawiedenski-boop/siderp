@@ -64,7 +64,7 @@ const FACTION_REVIEWER_ROLE_IDS = new Map(
 );
 const COOKIE_SECRET = process.env.COOKIE_SECRET || "";
 
-const SITE_DIR = path.join(__dirname, "fuegorp.pl");
+const SITE_DIR = __dirname;
 const DATA_DIR = path.join(__dirname, "data");
 const APPLICATIONS_FILE = path.join(DATA_DIR, "applications.json");
 const ORDERS_FILE = path.join(DATA_DIR, "orders.json");
