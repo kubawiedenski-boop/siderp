@@ -1,0 +1,111 @@
+﻿let currentUser = null;
+
+function escapeHTML(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+async function checkLogin() {
+    try {
+        const res = await fetch('/api/me').then(r => r.json());
+        
+        const navZaloguj = document.getElementById('nav-login');
+        const navPanel = document.getElementById('nav-panel');
+        const navWyloguj = document.getElementById('nav-logout');
+
+        if (res.loggedIn && res.user) {
+            currentUser = res;
+            if (navZaloguj) navZaloguj.style.display = 'none';
+            if (navPanel) navPanel.style.display = 'block';
+            if (navWyloguj) navWyloguj.style.display = 'block';
+// For podania.html dashboard
+            const userDash = document.getElementById('user-dashboard');
+            if (userDash) {
+                userDash.style.display = 'flex';
+                document.getElementById('user-name').textContent = res.user.globalName || res.user.username;
+                document.getElementById('user-avatar').src = res.user.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+const appsList = document.getElementById('my-apps');
+                if (appsList) appsList.style.display = 'block';
+                if (typeof loadMyApps === 'function') loadMyApps();
+            }
+        } else {
+            if (navZaloguj) navZaloguj.style.display = 'block';
+            if (navPanel) navPanel.style.display = 'none';
+            if (navWyloguj) navWyloguj.style.display = 'none';
+        }
+    } catch (err) {
+        console.error('Check login error:', err);
+    }
+}
+
+async function openPlayerPanel() {
+    const modal = document.getElementById('player-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    const content = document.getElementById('player-modal-content');
+    content.innerHTML = '<div class="loader-container"><div class="loader"></div></div>';
+    
+    try {
+        const res = await fetch('/api/player/data').then(r => r.json());
+        if (!res.success) throw new Error(res.error);
+
+        let html = `
+            <div class="panel-layout">
+                <div class="panel-main">
+                    <div class="panel-section">
+                        <div class="panel-user-header">
+                            <img src="${escapeHTML(currentUser.user.avatar)}" class="panel-avatar">
+                            <div>
+                                <h3>${escapeHTML(res.player ? res.player.name : 'Nie znaleziono postaci')}</h3>
+                                <p>${escapeHTML(currentUser.user.globalName || currentUser.user.username)} <span style="opacity: 0.3; font-size: 0.8rem">(${escapeHTML(res.player ? res.player.identifier : 'Brak połączenia z ESX')})</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-grid-3">
+                        <div class="stat-box"><i class="fa-solid fa-briefcase"></i><div><span>Zawód</span><strong>${escapeHTML(res.player ? res.player.job : 'Bezrobotny')}</strong></div></div>
+                        <div class="stat-box"><i class="fa-solid fa-building-columns"></i><div><span>Bank</span><strong class="gold-text">$${res.player ? res.player.bank.toLocaleString() : 0}</strong></div></div>
+                        <div class="stat-box"><i class="fa-solid fa-wallet"></i><div><span>Portfel</span><strong>$${res.player ? res.player.money.toLocaleString() : 0}</strong></div></div>
+                    </div>
+                    <div class="panel-section">
+                        <h4><i class="fa-solid fa-car"></i> Twoje Pojazdy (${res.vehicles.length})</h4>
+                        <div class="asset-list">
+                            ${res.vehicles.length > 0 ? res.vehicles.map(v => `
+                                <div class="asset-item"><i class="fa-solid fa-car-side"></i><span>${escapeHTML(v.model)}</span><span class="badge badge-outline">${escapeHTML(v.plate)}</span></div>
+                            `).join('') : '<p class="empty-text">Nie posiadasz żadnych pojazdów.</p>'}
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-side">
+                    <div class="panel-side-box">
+                        <h4>Status Podania</h4>
+                        <div class="mini-stats">
+                            <div class="mini-stat accepted"><span class="val">${res.stats.accepted}</span><span class="lbl">Przyjęte</span></div>
+                            <div class="mini-stat pending"><span class="val">${res.stats.pending}</span><span class="lbl">Wysłane</span></div>
+                            <div class="mini-stat rejected"><span class="val">${res.stats.rejected}</span><span class="lbl">Odrzucone</span></div>
+                        </div>
+                    </div>
+                    <div class="panel-side-box" style="margin-top: 1rem; opacity: 0.5; font-size: 0.8rem; text-align: center;"><p>Dane pobierane na żywo z bazy ESX</p></div>
+                </div>
+            </div>
+        `;
+        content.innerHTML = html;
+    } catch (err) {
+        content.innerHTML = `<div class="error-box"><i class="fa-solid fa-triangle-exclamation"></i><p>Blad: ${err.message}</p></div>`;
+    }
+}
+
+function closePlayerPanel() {
+    const modal = document.getElementById('player-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+// Odpal sprawdzanie od razu
+checkLogin();
+
+// I dodatkowo na DOMContentLoaded dla bezpieczenstwa
+document.addEventListener('DOMContentLoaded', checkLogin);

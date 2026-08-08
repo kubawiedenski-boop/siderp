@@ -1,0 +1,17 @@
+{
+  "name": "siderp-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SideRP website with Discord OAuth2 authentication and applications API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "dotenv": "^16.4.5"
+  }
+}

@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel opiekuna — SideRP</title>
+<link rel="icon" type="image/png" href="image.png">
+<link rel="shortcut icon" href="image.png" type="image/x-icon">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="style.css">
+<style>
+/* =========================================================
+   PANEL OPIEKUNA — SideRP UI
+   Korzysta z tych samych zmiennych, kart i przycisków co strona.
+   ========================================================= */
+.panel-page { min-height: 100vh; padding-top: 70px; }
+.panel-page .page-header { padding-bottom: 2.5rem; }
+
+.reviewer-wrap { padding: 0 0 5rem; position: relative; }
+.reviewer-wrap::before {
+    content: ''; position: absolute; width: 500px; height: 500px; top: -80px; left: -180px;
+    background: radial-gradient(circle, rgba(93,193,249,.035), transparent 70%);
+    pointer-events: none;
+}
+
+.reviewer-shell {
+    position: relative;
+    background: linear-gradient(145deg, rgba(21,21,21,.94), rgba(8,8,8,.92));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 30px 80px rgba(0,0,0,.45);
+    overflow: hidden;
+}
+.reviewer-shell::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(circle at 90% 0%, rgba(93,193,249,.055), transparent 32%);
+}
+
+.reviewer-top {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; justify-content: space-between; gap: 1.5rem;
+    padding: 1.5rem 1.8rem;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+    background: rgba(255,255,255,.015);
+}
+.reviewer-identity { display:flex; align-items:center; gap:1rem; min-width:0; }
+.reviewer-icon {
+    width: 52px; height: 52px; flex: 0 0 52px; border-radius: 14px;
+    display:flex; align-items:center; justify-content:center;
+    color: var(--gold); background: var(--gold-dim);
+    border: 1px solid rgba(93,193,249,.22);
+    box-shadow: 0 0 25px rgba(93,193,249,.08), inset 0 0 20px rgba(93,193,249,.04);
+    font-size: 1.2rem;
+}
+.reviewer-identity h2 { color:#fff; font-size:1.05rem; font-weight:800; margin:0; }
+.reviewer-identity p { color:#555; font-size:.75rem; margin:.2rem 0 0; }
+.reviewer-logout { flex-shrink:0; }
+
+.reviewer-content { position:relative; z-index:1; padding:1.5rem 1.8rem 2rem; }
+
+.reviewer-tabs {
+    display:flex; flex-wrap:wrap; gap:.55rem; margin-bottom:1.5rem;
+}
+.reviewer-tab {
+    appearance:none; border:1px solid var(--glass-border); background:rgba(255,255,255,.025);
+    color:#777; padding:.65rem 1rem; border-radius:999px; font:600 .75rem Inter,sans-serif;
+    cursor:pointer; transition:.25s ease; letter-spacing:.15px;
+}
+.reviewer-tab:hover { color:#fff; border-color:rgba(93,193,249,.25); background:rgba(93,193,249,.05); transform:translateY(-1px); }
+.reviewer-tab.active { color:var(--black); background:var(--gold); border-color:var(--gold); box-shadow:0 8px 25px rgba(93,193,249,.12); }
+
+.reviewer-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:.9rem; margin-bottom:1.4rem; }
+.reviewer-stat {
+    display:flex; align-items:center; gap:.85rem; padding:1rem 1.1rem;
+    background:rgba(255,255,255,.02); border:1px solid var(--glass-border); border-radius:var(--radius-sm);
+}
+.reviewer-stat i { color:var(--gold); font-size:1rem; opacity:.85; }
+.reviewer-stat strong { display:block; color:#fff; font-size:1.15rem; line-height:1; }
+.reviewer-stat span { display:block; color:#555; text-transform:uppercase; letter-spacing:1.3px; font-size:.6rem; margin-top:.3rem; }
+
+.reviewer-error {
+    display:none; margin-bottom:1rem; padding:1rem 1.1rem; border-radius:var(--radius-sm);
+    color:#ffb0b0; background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.18);
+}
+
+.reviewer-apps { display:grid; gap:.85rem; }
+.reviewer-card {
+    position:relative; overflow:hidden; background:rgba(255,255,255,.018);
+    border:1px solid var(--glass-border); border-radius:var(--radius);
+    padding:1.15rem 1.2rem; transition:.25s ease;
+}
+.reviewer-card::before {
+    content:''; position:absolute; inset:0 auto 0 0; width:2px; background:var(--gold); opacity:.18; transition:.25s ease;
+}
+.reviewer-card:hover { border-color:rgba(93,193,249,.16); transform:translateY(-2px); box-shadow:0 12px 35px rgba(0,0,0,.25); }
+.reviewer-card:hover::before { opacity:.8; }
+
+.reviewer-card-head { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; }
+.reviewer-faction { display:flex; align-items:center; gap:.8rem; min-width:0; }
+.reviewer-faction-icon {
+    width:38px; height:38px; flex:0 0 38px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+    color:var(--gold); background:var(--gold-dim); border:1px solid rgba(93,193,249,.12);
+}
+.reviewer-faction strong { display:block; color:#fff; font-size:.88rem; font-weight:800; }
+.reviewer-meta { color:#555; font-size:.68rem; margin-top:.15rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.reviewer-status { flex-shrink:0; padding:.38rem .65rem; border-radius:999px; font-size:.62rem; font-weight:800; text-transform:uppercase; letter-spacing:.7px; border:1px solid transparent; }
+.reviewer-status.pending { color:#ffc86d; background:rgba(255,193,7,.08); border-color:rgba(255,193,7,.12); }
+.reviewer-status.accepted { color:#7ee59b; background:rgba(34,197,94,.07); border-color:rgba(34,197,94,.12); }
+.reviewer-status.rejected { color:#ff8b92; background:rgba(239,68,68,.07); border-color:rgba(239,68,68,.12); }
+
+.reviewer-answers {
+    display:none; margin-top:1rem; padding:1rem; border-radius:var(--radius-sm);
+    background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.045);
+}
+.reviewer-answer { padding:.7rem 0; border-bottom:1px solid rgba(255,255,255,.045); }
+.reviewer-answer:first-child { padding-top:0; }
+.reviewer-answer:last-child { padding-bottom:0; border-bottom:0; }
+.reviewer-answer b { display:block; color:#666; font-size:.63rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:.25rem; }
+.reviewer-answer span { display:block; color:#bbb; font-size:.8rem; line-height:1.65; white-space:pre-wrap; word-break:break-word; }
+
+.reviewer-actions { display:flex; gap:.55rem; flex-wrap:wrap; margin-top:1rem; }
+.reviewer-action {
+    border:1px solid var(--glass-border); background:rgba(255,255,255,.025); color:#999;
+    padding:.58rem .85rem; border-radius:var(--radius-sm); font:700 .68rem Inter,sans-serif;
+    text-transform:uppercase; letter-spacing:.55px; cursor:pointer; transition:.22s ease;
+}
+.reviewer-action:hover { color:#fff; border-color:rgba(255,255,255,.16); transform:translateY(-1px); }
+.reviewer-action.accept:hover { color:#8bf0a8; border-color:rgba(34,197,94,.28); background:rgba(34,197,94,.06); }
+.reviewer-action.reject:hover { color:#ff9aa0; border-color:rgba(239,68,68,.28); background:rgba(239,68,68,.06); }
+.reviewer-action.open:hover { color:var(--gold); border-color:rgba(93,193,249,.25); background:rgba(93,193,249,.05); }
+
+.reviewer-empty { text-align:center; padding:4rem 1rem; color:#555; }
+.reviewer-empty i { display:block; color:#333; font-size:2rem; margin-bottom:.8rem; }
+.reviewer-empty strong { display:block; color:#777; font-size:.9rem; margin-bottom:.25rem; }
+.reviewer-empty span { font-size:.72rem; }
+
+@media (max-width: 700px) {
+    .panel-page { padding-top:64px; }
+    .reviewer-top { align-items:flex-start; flex-direction:column; padding:1.2rem; }
+    .reviewer-content { padding:1.2rem; }
+    .reviewer-summary { grid-template-columns:1fr; }
+    .reviewer-card-head { flex-direction:column; }
+    .reviewer-status { align-self:flex-start; }
+    .reviewer-meta { white-space:normal; }
+}
+.shop-admin-order{position:relative;overflow:hidden;background:rgba(255,255,255,.018);border:1px solid var(--glass-border);border-radius:var(--radius);padding:1.15rem 1.2rem;transition:.25s ease}.shop-admin-order:hover{border-color:rgba(93,193,249,.16);transform:translateY(-2px);box-shadow:0 12px 35px rgba(0,0,0,.25)}.shop-admin-order-head{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}.shop-admin-order-info strong{display:block;color:#fff;font-size:.9rem}.shop-admin-order-info span{display:block;color:#555;font-size:.68rem;margin-top:.3rem}.shop-admin-order-price{color:var(--gold);font-weight:900;font-size:.9rem;white-space:nowrap}.shop-admin-order-note{margin-top:.8rem;color:#888;font-size:.72rem;line-height:1.5}.shop-admin-order-actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem}.order-admin-status{font-style:normal;font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.7px;padding:.35rem .6rem;border-radius:999px}.order-admin-status.awaiting_payment{color:#ffc86d;background:rgba(255,193,7,.08)}.order-admin-status.paid{color:#7fc8ff;background:rgba(93,193,249,.08)}.order-admin-status.fulfilled{color:#7ee59b;background:rgba(34,197,94,.08)}.order-admin-status.rejected{color:#ff8b92;background:rgba(239,68,68,.08)}
+</style>
+</head>
+<body class="mesh-bg panel-page">
+
+<div id="preloader">
+    <div class="loader-glitch" data-text="SideRP">Side<span>RP</span></div>
+    <div class="loader-bar"></div>
+</div>
+<div class="cursor-dot" id="cursor-dot"></div>
+<div class="cursor-outline" id="cursor-outline"></div>
+
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="index.html" class="logo">
+            <img src="image.png" alt="SideRP Logo" style="height:65px;margin-right:10px;vertical-align:middle;">
+            Side<span>RP</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html">Strona główna</a></li>
+            <li><a href="regulamin.html">Regulamin</a></li>
+            <li><a href="podania.html" class="active">Podania</a></li>
+            <li><a href="ekipa.html">Ekipa</a></li>
+            <li><a href="galeria.html">Galeria</a></li>
+            <li><a href="sklep.html" class="btn-shop">Sklep</a></li>
+        </ul>
+        <div class="hamburger" onclick="this.classList.toggle('open');document.querySelector('.nav-links').classList.toggle('show')">
+            <span></span><span></span><span></span>
+        </div>
+    </div>
+</nav>
+
+<header class="page-header">
+    <h1 class="reveal">Panel <span>Opiekuna</span></h1>
+    <p class="reveal" style="transition-delay:.1s">Zarządzaj podaniami swoich frakcji w jednym miejscu.</p>
+</header>
+
+<section class="reviewer-wrap">
+    <div class="container">
+        <div class="reviewer-shell tilt-effect">
+            <div class="reviewer-top">
+                <div class="reviewer-identity">
+                    <div class="reviewer-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                    <div>
+                        <h2 id="who">Sprawdzanie uprawnień...</h2>
+                        <p>Panel rekrutacji SideRP</p>
+                    </div>
+                </div>
+                <a class="btn btn-outline reviewer-logout" href="/auth/logout"><i class="fa-solid fa-right-from-bracket"></i> Wyloguj</a>
+            </div>
+
+            <div class="reviewer-content">
+                <div id="error" class="reviewer-error"></div>
+
+                <div id="summary" class="reviewer-summary" style="display:none">
+                    <div class="reviewer-stat"><i class="fa-solid fa-file-lines"></i><div><strong id="stat-total">0</strong><span>Wszystkie</span></div></div>
+                    <div class="reviewer-stat"><i class="fa-solid fa-clock"></i><div><strong id="stat-pending">0</strong><span>Oczekujące</span></div></div>
+                    <div class="reviewer-stat"><i class="fa-solid fa-check"></i><div><strong id="stat-accepted">0</strong><span>Przyjęte</span></div></div>
+                </div>
+
+                <div id="tabs" class="reviewer-tabs"></div>
+                <div id="orders-panel" style="display:none">
+                    <div class="reviewer-summary" style="grid-template-columns:repeat(4,1fr)">
+                        <div class="reviewer-stat"><i class="fa-solid fa-receipt"></i><div><strong id="order-total">0</strong><span>Zamówienia</span></div></div>
+                        <div class="reviewer-stat"><i class="fa-solid fa-clock"></i><div><strong id="order-waiting">0</strong><span>Do opłacenia</span></div></div>
+                        <div class="reviewer-stat"><i class="fa-solid fa-coins"></i><div><strong id="order-paid">0</strong><span>Opłacone</span></div></div>
+                        <div class="reviewer-stat"><i class="fa-solid fa-check"></i><div><strong id="order-done">0</strong><span>Zrealizowane</span></div></div>
+                    </div>
+                    <div id="orders" class="reviewer-apps"></div>
+                </div>
+                <div id="apps" class="reviewer-apps">
+                    <div class="reviewer-empty"><i class="fa-solid fa-spinner fa-spin"></i><strong>Ładowanie podań</strong><span>Pobieram dane z serwera...</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-left">
+                <div class="footer-logo"><img src="image.png" alt="SideRP Logo" style="height:55px;margin-right:8px;vertical-align:middle;">Side<span>RP</span></div>
+                <p class="footer-desc">Oficjalny projekt RolePlay na platformie FiveM.</p>
+            </div>
+            <div class="footer-center">
+                <a href="index.html">Strona główna</a>
+                <a href="regulamin.html">Regulamin</a>
+                <a href="podania.html">Podania</a>
+                <a href="ekipa.html">Ekipa</a>
+                <a href="galeria.html">Galeria</a>
+                <a href="sklep.html">Sklep</a>
+            </div>
+            <div class="footer-right"><a href="https://discord.gg/Sideroleplay" target="_blank" class="footer-social"><i class="fa-brands fa-discord"></i></a></div>
+        </div>
+        <div class="footer-bottom"><p>© 2026 SideRP. Wszelkie prawa zastrzeżone.</p></div>
+    </div>
+</footer>
+
+<script>
+let allApps=[];let allOrders=[];let access=null;let selected='all';let view='apps';
+const names={lssd:'Los Santos Sheriff Department',lspd:'Los Santos Police Department',ems:'Emergency Medical Services',lsc:'Los Santos Customs',exotic:'Exotic Customs',doj:'Department of Justice',crime:'Organizacja Przestępcza',ped:'Ped'};
+const icons={lssd:'fa-star',lspd:'fa-handcuffs',ems:'fa-truck-medical',lsc:'fa-wrench',exotic:'fa-screwdriver-wrench',doj:'fa-building-columns',crime:'fa-crown',ped:'fa-user'};
+const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+async function load(){
+ try{
+  const me=await fetch('/api/me',{credentials:'same-origin'}).then(r=>r.json());
+  if(!me.loggedIn){location.href='/auth/login';return}
+  if(!me.isReviewer){showError('Nie masz uprawnień do panelu opiekuna.');document.getElementById('apps').innerHTML='';return}
+  access=me;
+  document.getElementById('who').textContent=me.isAdmin?'Opiekun główny — wszystkie frakcje':`Opiekun: ${(me.reviewerFactions||[]).map(x=>names[x]||x).join(', ')}`;
+  const r=await fetch('/api/reviewer/applications',{credentials:'same-origin'});const d=await r.json();
+  if(!r.ok)throw new Error(d.error||'Błąd pobierania podań');
+  allApps=d.applications||[];
+  document.getElementById('summary').style.display='grid';
+  buildTabs();render();
+ }catch(e){showError(e.message)}
+}
+function showError(msg){const el=document.getElementById('error');el.style.display='block';el.textContent=msg}
+function buildTabs(){
+ let factions=access.isAdmin?Object.keys(names):(access.reviewerFactions||[]);
+ const orderTab=access.isAdmin?`<button class="reviewer-tab" data-view="orders"><i class="fa-solid fa-receipt"></i> Zamówienia</button>`:'';
+ document.getElementById('tabs').innerHTML=`<button class="reviewer-tab active" data-view="apps" data-f="all"><i class="fa-solid fa-layer-group"></i> Wszystkie</button>`+factions.map(f=>`<button class="reviewer-tab" data-view="apps" data-f="${esc(f)}"><i class="fa-solid ${icons[f]||'fa-file'}"></i> ${esc(names[f]||f)}</button>`).join('')+orderTab;
+ document.querySelectorAll('.reviewer-tab').forEach(b=>b.onclick=()=>{view=b.dataset.view||'apps';selected=b.dataset.f||'all';document.querySelectorAll('.reviewer-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('apps').style.display=view==='apps'?'grid':'none';document.getElementById('orders-panel').style.display=view==='orders'?'block':'none';if(view==='orders')loadOrders();else render()});
+}
+function render(){
+ let apps=selected==='all'?allApps:allApps.filter(a=>a.faction===selected);
+ document.getElementById('stat-total').textContent=allApps.length;
+ document.getElementById('stat-pending').textContent=allApps.filter(a=>a.status==='pending').length;
+ document.getElementById('stat-accepted').textContent=allApps.filter(a=>a.status==='accepted').length;
+ const el=document.getElementById('apps');
+ if(!apps.length){el.innerHTML='<div class="reviewer-empty"><i class="fa-regular fa-folder-open"></i><strong>Brak podań</strong><span>W tej kategorii nie ma jeszcze żadnych podań.</span></div>';return}
+ el.innerHTML=apps.map(a=>{
+   const st=a.status==='accepted'?'accepted':a.status==='rejected'?'rejected':'pending';
+   const stxt=st==='accepted'?'Przyjęte':st==='rejected'?'Odrzucone':'Oczekujące';
+   const answers=Object.entries(a.answers||{}).map(([k,v])=>`<div class="reviewer-answer"><b>${esc(k)}</b><span>${esc(v)}</span></div>`).join('');
+   return `<article class="reviewer-card">
+      <div class="reviewer-card-head">
+        <div class="reviewer-faction">
+          <div class="reviewer-faction-icon"><i class="fa-solid ${icons[a.faction]||'fa-file'}"></i></div>
+          <div><strong>${esc(names[a.faction]||a.faction)}</strong><div class="reviewer-meta">${esc(a.username)} · Discord ID: ${esc(a.discordId)} · ${new Date(a.createdAt).toLocaleString('pl-PL')}</div></div>
+        </div>
+        <span class="reviewer-status ${st}">${stxt}</span>
+      </div>
+      <div class="reviewer-answers" id="ans-${esc(a.id)}">${answers||'<span class="muted">Brak odpowiedzi</span>'}</div>
+      <div class="reviewer-actions">
+        <button class="reviewer-action open" onclick="toggle('${esc(a.id)}')"><i class="fa-solid fa-eye"></i> Pokaż odpowiedzi</button>
+        ${st==='pending'?`<button class="reviewer-action accept" onclick="review('${esc(a.id)}','accepted')"><i class="fa-solid fa-check"></i> Przyjmij</button><button class="reviewer-action reject" onclick="review('${esc(a.id)}','rejected')"><i class="fa-solid fa-xmark"></i> Odrzuć</button>`:''}
+      </div>
+   </article>`
+ }).join('')
+}
+async function loadOrders(){
+ try{const r=await fetch('/api/reviewer/orders',{credentials:'same-origin'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Błąd pobierania zamówień');allOrders=d.orders||[];renderOrders();}catch(e){document.getElementById('orders').innerHTML=`<div class="reviewer-empty"><strong>${esc(e.message)}</strong></div>`}
+}
+function renderOrders(){
+ const counts={awaiting_payment:0,paid:0,fulfilled:0,rejected:0};allOrders.forEach(o=>counts[o.status]=(counts[o.status]||0)+1);
+ document.getElementById('order-total').textContent=allOrders.length;document.getElementById('order-waiting').textContent=counts.awaiting_payment;document.getElementById('order-paid').textContent=counts.paid;document.getElementById('order-done').textContent=counts.fulfilled;
+ const labels={awaiting_payment:'Oczekuje na płatność',paid:'Opłacone',fulfilled:'Zrealizowane',rejected:'Odrzucone'}; const el=document.getElementById('orders');
+ if(!allOrders.length){el.innerHTML='<div class="reviewer-empty"><i class="fa-regular fa-folder-open"></i><strong>Brak zamówień</strong><span>Nowe zakupy pojawią się tutaj.</span></div>';return;}
+ el.innerHTML=allOrders.map(o=>`<article class="shop-admin-order"><div class="shop-admin-order-head"><div class="shop-admin-order-info"><strong>${esc(o.product)}</strong><span>${esc(o.number)} · ${esc(o.username)} · Discord ID: ${esc(o.discordId)} · ${new Date(o.createdAt).toLocaleString('pl-PL')}</span></div><div style="text-align:right"><div class="shop-admin-order-price">${esc(o.price)}</div><em class="order-admin-status ${esc(o.status)}">${labels[o.status]||o.status}</em></div></div>${o.note?`<div class="shop-admin-order-note"><b>Notatka:</b> ${esc(o.note)}</div>`:''}<div class="shop-admin-order-actions">${o.status==='awaiting_payment'?`<button class="reviewer-action open" onclick="orderStatus('${esc(o.id)}','paid')"><i class="fa-solid fa-coins"></i> Potwierdź płatność</button><button class="reviewer-action reject" onclick="orderStatus('${esc(o.id)}','rejected')"><i class="fa-solid fa-xmark"></i> Odrzuć</button>`:''}${o.status==='paid'?`<button class="reviewer-action accept" onclick="orderStatus('${esc(o.id)}','fulfilled')"><i class="fa-solid fa-check"></i> Oznacz jako zrealizowane</button>`:''}${o.status==='fulfilled'?`<span style="color:#777;font-size:.68rem;align-self:center">Zamówienie zakończone</span>`:''}</div></article>`).join('');
+}
+async function orderStatus(id,status){const note=prompt(status==='rejected'?'Powód odrzucenia (opcjonalnie):':'Notatka (opcjonalnie):','')??'';const r=await fetch('/api/reviewer/orders/'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status,note})});const d=await r.json();if(!r.ok){alert(d.error||'Nie udało się zmienić zamówienia');return}const i=allOrders.findIndex(x=>x.id===id);if(i>=0)allOrders[i]=d.order;renderOrders()}
+function toggle(id){const x=document.getElementById('ans-'+id);x.style.display=x.style.display==='block'?'none':'block'}
+async function review(id,status){
+ const note=prompt(status==='accepted'?'Notatka do przyjęcia (opcjonalnie):':'Powód odrzucenia (opcjonalnie):','')??'';
+ const r=await fetch('/api/reviewer/applications/'+encodeURIComponent(id),{method:'PATCH',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({status,note})});
+ const d=await r.json();if(!r.ok){alert(d.error||'Nie udało się zmienić statusu');return}
+ const i=allApps.findIndex(x=>x.id===id);if(i>=0)allApps[i]=d.application;render()
+}
+load();
+</script>
+<script src="premium.js"></script>
+</body>
+</html>

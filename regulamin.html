@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regulamin — SideRP</title>
+    <link rel="icon" type="image/png" href="image.png">
+    <link rel="shortcut icon" href="image.png" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Meta Tags for Embeds -->
+    <meta property="og:title" content="Oficjalna Strona Side Roleplay">
+    <meta property="og:description" content="Dołącz do SideRP! Twoja nowa historia zaczyna się tutaj.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="http://SideRP.pl:37033/image.png">
+    <meta name="theme-color" content="#5dc1f9">
+</head>
+<body>
+
+<!-- PRELOADER -->
+<div id="preloader">
+    <div class="loader-glitch" data-text="SideRP">Side<span>RP</span></div>
+    <div class="loader-bar"></div>
+</div>
+
+<!-- CURSOR -->
+<div class="cursor-dot" id="cursor-dot"></div>
+<div class="cursor-outline" id="cursor-outline"></div>
+
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="index.html" class="logo">
+            <img src="image.png" alt="SideRP Logo" style="height: 65px; margin-right: 10px; vertical-align: middle;">
+            Side<span>RP</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html">Strona glowna</a></li>
+            <li><a href="regulamin.html" class="active">Regulamin</a></li>
+            <li><a href="podania.html">Podania</a></li>
+            <li><a href="ekipa.html">Ekipa</a></li>
+            <li><a href="galeria.html">Galeria</a></li>
+            <li id="nav-login"><a href="/auth/login" class="nav-discord"><i class="fa-brands fa-discord"></i> Zaloguj</a></li>
+            <li id="nav-panel" style="display:none"><a href="javascript:void(0)" onclick="openPlayerPanel()" class="btn-panel"><i class="fa-solid fa-user-gear"></i> Panel Gracza</a></li>
+            <li id="nav-logout" style="display:none"><a href="/auth/logout" style="color:#ef4444!important">Wyloguj</a></li><li><a href="sklep.html" class="btn-shop">Sklep</a></li>
+        </ul>
+        <div class="hamburger" onclick="this.classList.toggle('open');document.querySelector('.nav-links').classList.toggle('show')">
+            <span></span><span></span><span></span>
+        </div>
+    </div>
+</nav>
+
+<header class="page-header">
+    <h1>Regulamin <span>SideRP</span></h1>
+    <p>Zapoznaj sie z zasadami przed dolaczeniem do serwera.</p>
+</header>
+
+<section class="rules-section">
+    <div class="container">
+        
+        <div class="rules-intro">
+            <div class="intro-card">
+                <i class="fa-solid fa-sun intro-icon"></i>
+                <h2>Witaj na <span>SideRP</span></h2>
+                <p>Nasz serwer to miejsce, gdzie RolePlay spotyka się z klimatem pustyni, małych miasteczek i bezprawia. Tworzymy społeczność opartą na jakościowej grze fabularnej, wzajemnym szacunku i zgodności z zasadami.</p>
+                <div class="intro-note">
+                    Grając na SideRP, akceptujesz pełną treść niniejszego regulaminu. Nieznajomość zasad nie zwalnia z odpowiedzialności.
+                </div>
+            </div>
+        </div>
+
+        <div class="chapter-title">
+            <span class="chapter-num">Rozdzial I</span>
+            <h2>Zasady Ogolne</h2>
+        </div>
+
+        <div class="rules-list">
+            <div class="rule-card">
+                <div class="rule-header">
+                    <div class="rule-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                    <div>
+                        <span class="rule-number">§1</span>
+                        <h3>Postanowienia podstawowe</h3>
+                    </div>
+                </div>
+                <ul>
+                    <li>1.1 Przestrzegaj regulaminu i zachowuj kulture osobista.</li>
+                    <li>1.2 Administracja ma ostateczne zdanie w sytuacjach nieujetych w regulaminie.</li>
+                    <li>1.3 Ignorancja regulaminu nie stanowi usprawiedliwienia.</li>
+                    <li>1.4 Administracja moze zmienic regulamin — sprawdzaj Discorda.</li>
+                    <li>1.5 Blędy i exploity nalezy zglaszac. Wykorzystywanie = Ban Perm.</li>
+                    <li>1.6 Cheaty, hacki i makra sa surowo zabronione (Ban Perm).</li>
+                    <li>1.7 Zakaz udostepniania i handlu kontami.</li>
+                    <li>1.8 Multikonta sluza tylko do dodatkowych postaci, nie do omijania kar.</li>
+                    <li>1.9 Zakaz prowokowania administracji i trollowania.</li>
+                    <li>1.10 Obowiazek stosowania sie do polecen administracji podczas interwencji.</li>
+                </ul>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-header">
+                    <div class="rule-icon"><i class="fa-solid fa-comments"></i></div>
+                    <div>
+                        <span class="rule-number">§2</span>
+                        <h3>Komunikacja na serwerze</h3>
+                    </div>
+                </div>
+                <ul>
+                    <li>2.1 Zakaz mowy nienawisci i dyskryminacji (IC oraz OOC).</li>
+                    <li>2.2 Czat OOC sluzy wylacznie do komunikacji pozapostacowej.</li>
+                    <li>2.3 Czat IC (glosowy, /me, /do) sluzy TYLKO do RolePlay.</li>
+                    <li>2.4 Zakaz spamowania komendami (/me, /do, /ad itp.).</li>
+                    <li>2.5 Reklamowanie innych serwerow = Ban Perm bez odwolania.</li>
+                    <li>2.6 Streamowanie jest dozwolone z poszanowaniem prywatnosci innych.</li>
+                    <li>2.7 Wulgarne nicki sa zabronione.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chapter-title">
+            <span class="chapter-num">Rozdzial II</span>
+            <h2>Zasady RolePlay</h2>
+        </div>
+
+        <div class="rules-list">
+            <div class="rule-card">
+                <div class="rule-header">
+                    <div class="rule-icon"><i class="fa-solid fa-user-pen"></i></div>
+                    <div>
+                        <span class="rule-number">§3</span>
+                        <h3>Tworzenie postaci</h3>
+                    </div>
+                </div>
+                <ul>
+                    <li>3.1 Postac musi posiadac logiczna i unikalna fabule.</li>
+                    <li>3.2 Zakaz postaci "superbohaterskich" lub memicznych.</li>
+                    <li>3.3 Konsekwentne odgrywanie charakteru postaci.</li>
+                    <li>3.4 Zakaz grania kilku postaci w jednej akcji.</li>
+                    <li>3.5 Po smierci IC postac traci pamiec z ostatnich 30 minut.</li>
+                    <li>3.6 Metagaming (uzywanie wiedzy OOC w IC) jest zabroniony.</li>
+                    <li>3.7 Fear RP — musisz dbac o zycie swojej postaci.</li>
+                </ul>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-header">
+                    <div class="rule-icon"><i class="fa-solid fa-car"></i></div>
+                    <div>
+                        <span class="rule-number">§4</span>
+                        <h3>Jazda i pojazdy</h3>
+                    </div>
+                </div>
+                <ul>
+                    <li>4.1 Jazda musi byc realistyczna (zakaz Fail Driving).</li>
+                    <li>4.2 Wypadki muszą byc ogrywane (/me, /do).</li>
+                    <li>4.3 Uzywaj aut zgodnie z ich przeznaczeniem.</li>
+                    <li>4.4 VDM — celowe rozjezdzanie graczy jest zabronione.</li>
+                    <li>4.5 Zakaz uzywania pojazdow jako broni.</li>
+                </ul>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-header">
+                    <div class="rule-icon"><i class="fa-solid fa-gun"></i></div>
+                    <div>
+                        <span class="rule-number">§5</span>
+                        <h3>Przestepczosc</h3>
+                    </div>
+                </div>
+                <ul>
+                    <li>5.1 Przestepczosc musi byc logicznie umotywowana fabularnie.</li>
+                    <li>5.2 Akcje wymagaja RP przed, w trakcie i po zdarzeniu.</li>
+                    <li>5.3 Akcje musza zostawiac slady lub miec swiadkow.</li>
+                    <li>5.4 Przestrzegaj TABELI LIMITÓW (ponizej).</li>
+                    <li>5.5 Zakaz farmowania akcji przestepczych.</li>
+                </ul>
+            </div>
+
+            <div class="rule-card">
+                <div class="rule-header">
+                    <div class="rule-icon"><i class="fa-solid fa-handcuffs"></i></div>
+                    <div>
+                        <span class="rule-number">§6</span>
+                        <h3>Sluzby Publiczne</h3>
+                    </div>
+                </div>
+                <ul>
+                    <li>6.1 Szanuj RP LSPD, EMS i GOV — to nie sa boty.</li>
+                    <li>6.2 Zakaz zabijania sluzb bez powaznego powodu fabularnego.</li>
+                    <li>6.3 Porwanie sluzby wymaga min. 4 graczy w gangu.</li>
+                    <li>6.4 Budynki sluzb to Green Zone (zakaz campowania).</li>
+                    <li>6.5 Fail RP w sluzbach jest surowo karany.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chapter-title">
+            <span class="chapter-num">Rozdzial III</span>
+            <h2>Definicje i Zakazy</h2>
+        </div>
+
+        <div class="rules-grid">
+            <div class="def-card"><h4>Fail RP</h4><p>Lamanie realizmu gry lub logiki swiata.</p></div>
+            <div class="def-card"><h4>VDM</h4><p>Rozjezdzanie ludzi autem bez powodu.</p></div>
+            <div class="def-card"><h4>MG (Metagaming)</h4><p>Uzywanie wiedzy z Discorda/Streamow w grze.</p></div>
+            <div class="def-card"><h4>PG (Power Gaming)</h4><p>Narzucanie woli innym bez szansy na reakcje.</p></div>
+            <div class="def-card"><h4>RDM</h4><p>Zabijanie bez powodu fabularnego.</p></div>
+            <div class="def-card"><h4>CL (Combat Log)</h4><p>Ucieczka z gry podczas akcji (Ban).</p></div>
+            <div class="def-card"><h4>RK (Revenge Kill)</h4><p>Zemsta po smierci i powrot na miejsce zgonu.</p></div>
+            <div class="def-card"><h4>CB (Combat Baiting)</h4><p>Prowokowanie policji do poscigu.</p></div>
+        </div>
+
+        <div class="chapter-title">
+            <span class="chapter-num">Rozdzial IV</span>
+            <h2>Strefy Serwera</h2>
+        </div>
+
+        <div class="zones-grid">
+            <div class="zone-card green">
+                <h3><i class="fa-solid fa-leaf"></i> Green Zone</h3>
+                <p>Spawn, Szpitale, Komisariaty, Urzedy.</p>
+                <ul>
+                    <li>Zakaz przestepstw</li>
+                    <li>Zakaz ucieczki do GZ</li>
+                </ul>
+            </div>
+            <div class="zone-card red">
+                <h3><i class="fa-solid fa-skull"></i> Red Zone</h3>
+                <p>Tereny gangow, Pustynia, Przemyt.</p>
+                <ul>
+                    <li>Zlagodzone zasady strzelania</li>
+                    <li>Wjazd na wlasne ryzyko</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chapter-title">
+            <span class="chapter-num">Rozdzial V</span>
+            <h2>Drugie Postacie i "Pedy"</h2>
+        </div>
+
+        <div class="rules-list">
+            <div class="rule-card">
+                <div class="rule-header">
+                    <div class="rule-icon"><i class="fa-solid fa-users-rays"></i></div>
+                    <div>
+                        <span class="rule-number">§21</span>
+                        <h3>Drugie postacie</h3>
+                    </div>
+                </div>
+                <ul>
+                    <li>21.1 Kazdy gracz moze posiadac do 3 postaci.</li>
+                    <li>21.2 Postacie musza byc niezalezne — zakaz przekazywania majatku.</li>
+                    <li>21.3 Zakaz grania dwiema postaciami w tej samej frakcji/gangu.</li>
+                    <li>21.4 Jesli jedna postac jest w sluzbach, druga nie moze byc w gangu.</li>
+                    <li>21.5 Postaci nie moga sie spotykac IC ani wspolpracowac.</li>
+                </ul>
+            </div>
+            <div class="rule-card">
+                <div class="rule-header">
+                    <div class="rule-icon"><i class="fa-solid fa-child"></i></div>
+                    <div>
+                        <span class="rule-number">§22</span>
+                        <h3>Dzieci i Zwierzeta</h3>
+                    </div>
+                </div>
+                <ul>
+                    <li>22.1 Dozwolone jest granie dziecmi i zwierzetami (pedy).</li>
+                    <li>22.2 Gra dzieckiem wymaga zgody administracji i szczegolnego RP.</li>
+                    <li>22.3 Zwierzeta musza byc realistyczne — pies nie moze mowic ani prowadzic akcji.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chapter-title">
+            <span class="chapter-num">Rozdzial VI</span>
+            <h2>Kary i Odwolania</h2>
+        </div>
+
+        <div class="rules-list">
+            <div class="rule-card">
+                <div class="rule-header">
+                    <div class="rule-icon"><i class="fa-solid fa-handcuffs"></i></div>
+                    <div>
+                        <span class="rule-number">§23</span>
+                        <h3>System kar</h3>
+                    </div>
+                </div>
+                <ul>
+                    <li>Ostrzezenie — pierwsza drobna przewina.</li>
+                    <li>Kick — wyrzucenie z serwera.</li>
+                    <li>Ban czasowy (1-30 dni) — za powazne lamanie zasad.</li>
+                    <li>Ban permanentny — za cheaty, exploity i toksyczne zachowanie.</li>
+                </ul>
+            </div>
+            <div class="rule-card">
+                <div class="rule-header">
+                    <div class="rule-icon"><i class="fa-solid fa-envelope-open-text"></i></div>
+                    <div>
+                        <span class="rule-number">§24</span>
+                        <h3>Odwolania</h3>
+                    </div>
+                </div>
+                <ul>
+                    <li>24.1 Odwolania sklada sie na Discordzie w kanale #odwolania.</li>
+                    <li>24.2 Musi zawierac ID postaci, date bana i szczere wyjasnienie.</li>
+                    <li>24.3 Administracja rozpatruje wnioski w ciagu 48 godzin.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chapter-title">
+            <span class="chapter-num">Rozdzial VII</span>
+            <h2>Postanowienia koncowe</h2>
+        </div>
+
+        <div class="rules-list">
+            <div class="rule-card">
+                <div class="rule-header">
+                    <div class="rule-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+                    <div>
+                        <span class="rule-number">§25</span>
+                        <h3>Zmiany regulaminu</h3>
+                    </div>
+                </div>
+                <ul>
+                    <li>25.1 Administracja zastrzega sobie prawo do zmiany regulaminu.</li>
+                    <li>25.2 Gracz ma obowiazek śledzenia zmian na Discordzie.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="chapter-title">
+            <span class="chapter-num">Rozdzial VIII</span>
+            <h2>Tabela Limitow Akcji</h2>
+        </div>
+
+        <div class="limits-section">
+            <div class="limit-group">
+                <h3><i class="fa-solid fa-vault"></i> Napady</h3>
+                <div class="limit-table">
+                    <div class="limit-row"><span>Sklep / Stacja</span> <span>2-4 osoby</span> </div>
+                    <div class="limit-row"><span>Jubiler</span> <span>3-6 osob</span> </div>
+                    <div class="limit-row"><span>Bank Fleeca</span> <span>3-6 osob</span> </div>
+                    <div class="limit-row"><span>Pacific Bank</span> <span>6-10 osob</span> </div>
+                    <div class="limit-row"><span>Konwoje</span> <span>4-8 osob</span> </div>
+                </div>
+            </div>
+            <div class="limit-group">
+                <h3><i class="fa-solid fa-masks-theater"></i> Porwania</h3>
+                <div class="limit-table">
+                    <div class="limit-row"><span>Cywil / Gang</span> <span>2-6 osob</span> </div>
+                    <div class="limit-row"><span>EMS</span> <span>4-6 osob</span> </div>
+                    <div class="limit-row"><span>LSPD</span> <span>4-8 osob</span> </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-left">
+                <div class="footer-logo">
+                    <img src="image.png" alt="SideRP Logo" style="height: 55px; margin-right: 8px; vertical-align: middle;">
+                    Side<span>RP</span>
+                </div>
+                <p class="footer-desc">Oficjalny projekt RolePlay na platformie FiveM.</p>
+            </div>
+            <div class="footer-center">
+                <a href="index.html">Strona glowna</a>
+                <a href="regulamin.html">Regulamin</a>
+                <a href="podania.html">Podania</a>
+                <a href="ekipa.html">Ekipa</a>
+                <a href="galeria.html">Galeria</a>
+                <a href="sklep.html">Sklep</a>
+            </div>
+            <div class="footer-right">
+                <a href="https://discord.gg/Sideroleplay" target="_blank" class="footer-social"><i class="fa-brands fa-discord"></i></a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 SideRP. Wszelkie prawa zastrzezone.</p>
+        </div>
+    </div>
+    </div>
+</footer>
+
+<!-- PLAYER PANEL MODAL -->
+<div id="player-modal" class="modal-overlay" style="display:none">
+    <div class="modal-container glass-card gold-glow tilt-effect">
+        <div class="modal-header">
+            <h2 class="text-gradient"><i class="fa-solid fa-id-card"></i> Profil Obywatela</h2>
+            <button class="btn-close" onclick="closePlayerPanel()">&times;</button>
+        </div>
+        <div class="modal-body" id="player-modal-content">
+            <div class="loader-container"><div class="loader"></div></div>
+        </div>
+    </div>
+</div>
+
+<script src="side.js?v=3.0"></script>
+<script src="premium.js"></script>
+
+</body>
+</html>
