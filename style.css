@@ -190,7 +190,7 @@ ul { list-style: none; }
     border-radius: 50%;
     border: 1px solid rgba(93, 193, 249, 0.35);
     background: rgba(93, 193, 249, 0.08);
-    color: #5dc1f9;
+    color: #39ff88;
     font-size: 34px;
     box-shadow: 0 0 35px rgba(93, 193, 249, 0.12);
 }
@@ -228,7 +228,7 @@ ul { list-style: none; }
 }
 
 .gallery-unavailable h2 span {
-    color: #5dc1f9;
+    color: #39ff88;
 }
 
 .gallery-unavailable p {
@@ -245,7 +245,7 @@ ul { list-style: none; }
     width: 80px;
     height: 2px;
     margin: 30px auto;
-    background: #5dc1f9;
+    background: #39ff88;
     box-shadow: 0 0 15px rgba(93, 193, 249, 0.6);
 }
 
@@ -261,7 +261,7 @@ ul { list-style: none; }
 }
 
 .gallery-soon i {
-    color: #5dc1f9;
+    color: #39ff88;
 }
 
 
