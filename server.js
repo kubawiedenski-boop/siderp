@@ -1,38 +1,41 @@
 require("dotenv").config();
+
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const { Pool } = require("pg");
 
 const app = express();
+
 app.get('/api/server/online', async (req, res) => {
-    try {
-        const response = await fetch('http://93.95.119.135:20519/players.json');
-
-        if (!response.ok) {
-            throw new Error('FiveM server offline');
-        }
-
-        const players = await response.json();
-
-        res.json({
-            online: Array.isArray(players) ? players.length : 0
-        });
-    } catch (error) {
-        res.json({
-            online: 0
-        });
+  try {
+    const response = await fetch('http://93.95.119.135:20519/players.json');
+    if (!response.ok) {
+      throw new Error('FiveM server offline');
     }
+    const players = await response.json();
+    res.json({
+      online: Array.isArray(players) ? players.length : 0
+    });
+  } catch (error) {
+    res.json({
+      online: 0
+    });
+  }
 });
+
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
 
 const PORT = Number(process.env.PORT || 37033);
 const BASE_URL = (process.env.BASE_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
+
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID || "";
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || "";
 const GUILD_ID = process.env.DISCORD_GUILD_ID || "";
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || "";
+
 const REVIEWER_ROLE_IDS = new Set(
   (process.env.REVIEWER_ROLE_IDS || "").split(",").map(s => s.trim()).filter(Boolean)
 );
@@ -58,10 +61,10 @@ const ROLE_BY_FACTION = {
   ped: process.env.ROLE_PED_ID || ""
 };
 
-
 const FACTION_REVIEWER_ROLE_IDS = new Map(
   Object.entries(ROLE_BY_FACTION).filter(([, roleId]) => roleId).map(([faction, roleId]) => [faction, roleId])
 );
+
 const COOKIE_SECRET = process.env.COOKIE_SECRET || "";
 
 const SITE_DIR = __dirname;
@@ -76,6 +79,256 @@ if (!fs.existsSync(ORDERS_FILE)) fs.writeFileSync(ORDERS_FILE, "[]", "utf8");
 
 app.use(express.json({ limit: "64kb" }));
 app.use(express.urlencoded({ extended: false }));
+
+// =====================================================
+// POSTGRESQL — zamówienia sklepu
+// =====================================================
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL
+    ? { rejectUnauthorized: false }
+    : false
+});
+
+async function initDatabase() {
+  if (!process.env.DATABASE_URL) {
+    throw new Error("Brak DATABASE_URL w zmiennych środowiskowych.");
+  }
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS orders (
+      id TEXT PRIMARY KEY,
+      number TEXT UNIQUE NOT NULL,
+      discord_id TEXT NOT NULL,
+      username TEXT,
+      product TEXT NOT NULL,
+      price TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'awaiting_payment',
+      created_at TIMESTAMPTZ NOT NULL,
+      paid_at TIMESTAMPTZ,
+      fulfilled_at TIMESTAMPTZ,
+      reviewed_by JSONB,
+      note TEXT DEFAULT ''
+    )
+  `);
+
+  // Jednorazowa migracja starych zamówień z orders.json.
+  const countResult = await pool.query(
+    "SELECT COUNT(*)::int AS count FROM orders"
+  );
+
+  if (countResult.rows[0].count === 0 && fs.existsSync(ORDERS_FILE)) {
+    let oldOrders = [];
+
+    try {
+      oldOrders = JSON.parse(
+        fs.readFileSync(ORDERS_FILE, "utf8")
+      );
+    } catch {
+      oldOrders = [];
+    }
+
+    for (const order of oldOrders) {
+      await pool.query(
+        `
+        INSERT INTO orders (
+          id,
+          number,
+          discord_id,
+          username,
+          product,
+          price,
+          status,
+          created_at,
+          paid_at,
+          fulfilled_at,
+          reviewed_by,
+          note
+        )
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+        ON CONFLICT (id) DO NOTHING
+        `,
+        [
+          order.id,
+          order.number,
+          order.discordId,
+          order.username || "",
+          order.product,
+          order.price,
+          order.status || "awaiting_payment",
+          order.createdAt,
+          order.paidAt || null,
+          order.fulfilledAt || null,
+          order.reviewedBy
+            ? JSON.stringify(order.reviewedBy)
+            : null,
+          order.note || ""
+        ]
+      );
+    }
+
+    if (oldOrders.length > 0) {
+      console.log(
+        `✅ Przeniesiono ${oldOrders.length} zamówień z orders.json do PostgreSQL.`
+      );
+    }
+  }
+
+  console.log("✅ PostgreSQL gotowy.");
+}
+
+function dbOrder(row) {
+  return {
+    id: row.id,
+    number: row.number,
+    discordId: row.discord_id,
+    username: row.username,
+    product: row.product,
+    price: row.price,
+    status: row.status,
+    createdAt: new Date(row.created_at).toISOString(),
+    paidAt: row.paid_at
+      ? new Date(row.paid_at).toISOString()
+      : null,
+    fulfilledAt: row.fulfilled_at
+      ? new Date(row.fulfilled_at).toISOString()
+      : null,
+    reviewedBy: row.reviewed_by || null,
+    note: row.note || ""
+  };
+}
+
+async function getAllOrders() {
+  const result = await pool.query(`
+    SELECT *
+    FROM orders
+    ORDER BY created_at DESC
+  `);
+
+  return result.rows.map(dbOrder);
+}
+
+async function getOrdersForUser(discordId) {
+  const result = await pool.query(
+    `
+    SELECT *
+    FROM orders
+    WHERE discord_id = $1
+    ORDER BY created_at DESC
+    `,
+    [discordId]
+  );
+
+  return result.rows.map(dbOrder);
+}
+
+async function getOrderByNumber(number) {
+  const result = await pool.query(
+    `
+    SELECT *
+    FROM orders
+    WHERE UPPER(number) = UPPER($1)
+    LIMIT 1
+    `,
+    [number]
+  );
+
+  return result.rows[0]
+    ? dbOrder(result.rows[0])
+    : null;
+}
+
+async function getOrderById(id) {
+  const result = await pool.query(
+    `
+    SELECT *
+    FROM orders
+    WHERE id = $1
+    LIMIT 1
+    `,
+    [id]
+  );
+
+  return result.rows[0]
+    ? dbOrder(result.rows[0])
+    : null;
+}
+
+async function createOrder(order) {
+  const result = await pool.query(
+    `
+    INSERT INTO orders (
+      id,
+      number,
+      discord_id,
+      username,
+      product,
+      price,
+      status,
+      created_at,
+      paid_at,
+      fulfilled_at,
+      reviewed_by,
+      note
+    )
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+    RETURNING *
+    `,
+    [
+      order.id,
+      order.number,
+      order.discordId,
+      order.username,
+      order.product,
+      order.price,
+      order.status,
+      order.createdAt,
+      order.paidAt,
+      order.fulfilledAt,
+      order.reviewedBy
+        ? JSON.stringify(order.reviewedBy)
+        : null,
+      order.note || ""
+    ]
+  );
+
+  return dbOrder(result.rows[0]);
+}
+
+async function updateOrder(order) {
+  const result = await pool.query(
+    `
+    UPDATE orders
+    SET
+      status = $2,
+      paid_at = $3,
+      fulfilled_at = $4,
+      reviewed_by = $5,
+      note = $6
+    WHERE id = $1
+    RETURNING *
+    `,
+    [
+      order.id,
+      order.status,
+      order.paidAt || null,
+      order.fulfilledAt || null,
+      order.reviewedBy
+        ? JSON.stringify(order.reviewedBy)
+        : null,
+      order.note || ""
+    ]
+  );
+
+  return result.rows[0]
+    ? dbOrder(result.rows[0])
+    : null;
+}
+
+function makeOrderNumber() {
+  return `SR-${Math.floor(100000 + Math.random() * 900000)}`;
+}
 
 function requiredConfig() {
   const missing = [];
@@ -154,6 +407,7 @@ async function discordTokenExchange(code) {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body
   });
+
   if (!r.ok) throw new Error(`Discord token exchange failed: ${r.status}`);
   return r.json();
 }
@@ -184,10 +438,12 @@ async function accessForUser(userId) {
   const member = await discordMember(userId);
   const roles = member && Array.isArray(member.roles) ? member.roles : [];
   const isAdmin = roles.some(role => ADMIN_ROLE_IDS.has(role) || REVIEWER_ROLE_IDS.has(role));
+
   const factions = [];
   for (const [faction, roleId] of FACTION_REVIEWER_ROLE_IDS.entries()) {
     if (roles.includes(roleId)) factions.push(faction);
   }
+
   return { isAdmin, factions, roles };
 }
 
@@ -220,18 +476,6 @@ function writeApplications(apps) {
   const tmp = APPLICATIONS_FILE + ".tmp";
   fs.writeFileSync(tmp, JSON.stringify(apps, null, 2), "utf8");
   fs.renameSync(tmp, APPLICATIONS_FILE);
-}
-
-function readOrders() {
-  try { return JSON.parse(fs.readFileSync(ORDERS_FILE, "utf8")); } catch { return []; }
-}
-function writeOrders(orders) {
-  const tmp = ORDERS_FILE + ".tmp";
-  fs.writeFileSync(tmp, JSON.stringify(orders, null, 2), "utf8");
-  fs.renameSync(tmp, ORDERS_FILE);
-}
-function makeOrderNumber(orders) {
-  let number; do { number = `SR-${Math.floor(100000 + Math.random() * 900000)}`; } while (orders.some(o => o.number === number)); return number;
 }
 
 // OAuth2
@@ -357,31 +601,59 @@ app.post("/api/applications", requireAuth, (req, res) => {
 
   apps.push(application);
   writeApplications(apps);
+
   res.json({ success: true, application: { id: application.id, status: application.status } });
 });
 
 // Shop orders — manualne płatności przez Discord.
-app.get("/api/my-orders", requireAuth, (req, res) => {
-  const orders = readOrders().filter(o => o.discordId === req.user.id).sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt));
-  res.json({ success:true, orders, shopDiscordUrl: SHOP_DISCORD_URL });
+app.get("/api/my-orders", requireAuth, async (req, res) => {
+  try {
+    const orders = await getOrdersForUser(req.user.id);
+
+    res.json({
+      success: true,
+      orders,
+      shopDiscordUrl: SHOP_DISCORD_URL
+    });
+  } catch (err) {
+    console.error("MY ORDERS:", err);
+    res.status(500).json({
+      success: false,
+      error: "Nie udało się pobrać zamówień."
+    });
+  }
 });
 
 // Publiczny feed ostatnich opłaconych/zrealizowanych zakupów.
 // Nie zwracamy Discord ID ani innych prywatnych danych.
-app.get("/api/shop/recent", (req, res) => {
-  const orders = readOrders()
-    .filter(o => o.status === "paid" || o.status === "fulfilled")
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .slice(0, 6)
-    .map(o => ({
-      id: o.id,
-      username: o.username || "Gracz",
-      product: o.product || "Zakup",
-      createdAt: o.createdAt,
-      status: o.status
-    }));
+app.get("/api/shop/recent", async (req, res) => {
+  try {
+    const orders = (await getAllOrders())
+      .filter(o =>
+        o.status === "paid" ||
+        o.status === "fulfilled"
+      )
+      .slice(0, 6)
+      .map(o => ({
+        id: o.id,
+        username: o.username || "Gracz",
+        product: o.product || "Zakup",
+        createdAt: o.createdAt,
+        status: o.status
+      }));
 
-  res.json({ success: true, orders });
+    res.json({
+      success: true,
+      orders
+    });
+  } catch (err) {
+    console.error("SHOP RECENT:", err);
+
+    res.status(500).json({
+      success: false,
+      error: "Nie udało się pobrać ostatnich zakupów."
+    });
+  }
 });
 
 app.get("/api/server-status", async (req, res) => {
@@ -393,7 +665,9 @@ app.get("/api/server-status", async (req, res) => {
       signal: AbortSignal.timeout(2500),
       headers: { "User-Agent": "SideRP-Shop/1.0" }
     });
+
     if (!response.ok) return res.json({ online: false, players: 0 });
+
     const players = await response.json();
     res.json({ online: true, players: Array.isArray(players) ? players.length : 0 });
   } catch {
@@ -401,32 +675,158 @@ app.get("/api/server-status", async (req, res) => {
   }
 });
 
-app.post("/api/orders", requireAuth, (req, res) => {
-  const product = String(req.body?.product || "").trim().slice(0,160);
-  const price = String(req.body?.price || "").trim().slice(0,40);
-  if (!product || !price) return res.status(400).json({success:false,error:"Brak produktu lub ceny."});
-  const orders = readOrders();
-  const order = { id:crypto.randomUUID(), number:makeOrderNumber(orders), discordId:req.user.id, username:req.user.globalName || req.user.username, product, price, status:"awaiting_payment", createdAt:new Date().toISOString(), paidAt:null, fulfilledAt:null, reviewedBy:null, note:"" };
-  orders.push(order); writeOrders(orders);
-  res.json({success:true, order, shopDiscordUrl:SHOP_DISCORD_URL});
+app.post("/api/orders", requireAuth, async (req, res) => {
+  try {
+    const product = String(req.body?.product || "")
+      .trim()
+      .slice(0, 160);
+
+    const price = String(req.body?.price || "")
+      .trim()
+      .slice(0, 40);
+
+    if (!product || !price) {
+      return res.status(400).json({
+        success: false,
+        error: "Brak produktu lub ceny."
+      });
+    }
+
+    let number;
+
+    while (true) {
+      number = makeOrderNumber();
+
+      const existing = await getOrderByNumber(number);
+
+      if (!existing) break;
+    }
+
+    const order = {
+      id: crypto.randomUUID(),
+      number,
+      discordId: req.user.id,
+      username: req.user.globalName || req.user.username,
+      product,
+      price,
+      status: "awaiting_payment",
+      createdAt: new Date().toISOString(),
+      paidAt: null,
+      fulfilledAt: null,
+      reviewedBy: null,
+      note: ""
+    };
+
+    const savedOrder = await createOrder(order);
+
+    res.json({
+      success: true,
+      order: savedOrder,
+      shopDiscordUrl: SHOP_DISCORD_URL
+    });
+
+  } catch (err) {
+    console.error("CREATE ORDER:", err);
+
+    res.status(500).json({
+      success: false,
+      error: "Nie udało się utworzyć zamówienia."
+    });
+  }
 });
 
-app.get("/api/reviewer/orders", requireReviewer, (req,res) => {
-  if (!req.access.isAdmin) return res.status(403).json({success:false,error:"Tylko administrator może zarządzać zamówieniami sklepu."});
-  res.json({success:true,orders:readOrders().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))});
+app.get("/api/reviewer/orders", requireReviewer, async (req, res) => {
+  if (!req.access.isAdmin) {
+    return res.status(403).json({
+      success: false,
+      error: "Tylko administrator może zarządzać zamówieniami sklepu."
+    });
+  }
+
+  try {
+    res.json({
+      success: true,
+      orders: await getAllOrders()
+    });
+  } catch (err) {
+    console.error("REVIEWER ORDERS:", err);
+
+    res.status(500).json({
+      success: false,
+      error: "Nie udało się pobrać zamówień."
+    });
+  }
 });
 
-app.patch("/api/reviewer/orders/:id", requireReviewer, (req,res) => {
-  if (!req.access.isAdmin) return res.status(403).json({success:false,error:"Tylko administrator może zarządzać zamówieniami sklepu."});
-  const orders=readOrders(); const order=orders.find(o=>o.id===req.params.id);
-  if(!order) return res.status(404).json({success:false,error:"Nie znaleziono zamówienia."});
-  const status=String(req.body?.status||"").toLowerCase();
-  if(!["awaiting_payment","paid","fulfilled","rejected"].includes(status)) return res.status(400).json({success:false,error:"Nieprawidłowy status zamówienia."});
-  order.status=status; order.note=typeof req.body?.note==="string"?req.body.note.slice(0,1000):order.note||"";
-  order.reviewedBy={id:req.user.id,username:req.user.globalName||req.user.username};
-  if(status==="paid"&&!order.paidAt) order.paidAt=new Date().toISOString();
-  if(status==="fulfilled"&&!order.fulfilledAt) order.fulfilledAt=new Date().toISOString();
-  writeOrders(orders); res.json({success:true,order});
+app.patch("/api/reviewer/orders/:id", requireReviewer, async (req, res) => {
+  if (!req.access.isAdmin) {
+    return res.status(403).json({
+      success: false,
+      error: "Tylko administrator może zarządzać zamówieniami sklepu."
+    });
+  }
+
+  try {
+    const order = await getOrderById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        error: "Nie znaleziono zamówienia."
+      });
+    }
+
+    const status = String(
+      req.body?.status || ""
+    ).toLowerCase();
+
+    if (![
+      "awaiting_payment",
+      "paid",
+      "fulfilled",
+      "rejected"
+    ].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: "Nieprawidłowy status zamówienia."
+      });
+    }
+
+    order.status = status;
+
+    order.note =
+      typeof req.body?.note === "string"
+        ? req.body.note.slice(0, 1000)
+        : order.note || "";
+
+    order.reviewedBy = {
+      id: req.user.id,
+      username: req.user.globalName || req.user.username
+    };
+
+    if (status === "paid" && !order.paidAt) {
+      order.paidAt = new Date().toISOString();
+    }
+
+    if (status === "fulfilled" && !order.fulfilledAt) {
+      order.fulfilledAt = new Date().toISOString();
+    }
+
+    const savedOrder = await updateOrder(order);
+
+    res.json({
+      success: true,
+      order: savedOrder
+    });
+
+  } catch (err) {
+    console.error("UPDATE ORDER:", err);
+
+    res.status(500).json({
+      success: false,
+      error: "Nie udało się zaktualizować zamówienia."
+    });
+  }
 });
 
 // =====================================================
@@ -434,7 +834,6 @@ app.patch("/api/reviewer/orders/:id", requireReviewer, (req,res) => {
 // =====================================================
 
 app.get("/api/bot/orders/:number", async (req, res) => {
-
   const configuredSecret =
     String(process.env.SIDERP_API_SECRET || "");
 
@@ -472,12 +871,7 @@ app.get("/api/bot/orders/:number", async (req, res) => {
     });
   }
 
-  const orders = readOrders();
-
-  const order = orders.find(
-    o =>
-      String(o.number || "").toUpperCase() === number
-  );
+  const order = await getOrderByNumber(number);
 
   if (!order) {
     return res.status(404).json({
@@ -502,7 +896,6 @@ app.get("/api/bot/orders/:number", async (req, res) => {
       note: order.note || ""
     }
   });
-
 });
 
 // Faction reviewer / management API.
@@ -514,6 +907,7 @@ app.get("/api/reviewer/applications", requireReviewer, (req, res) => {
   }
 
   apps.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
   res.json({
     success: true,
     applications: apps,
@@ -546,6 +940,7 @@ app.patch("/api/reviewer/applications/:id", requireReviewer, (req, res) => {
   application.reviewNote = typeof req.body?.note === "string" ? req.body.note.slice(0, 2000) : "";
 
   writeApplications(apps);
+
   res.json({ success: true, application });
 });
 
@@ -578,8 +973,10 @@ app.get("/api/setup-status", async (req, res) => {
     baseUrl: BASE_URL,
     guildId: GUILD_ID || null
   };
+
   let access = null;
   if (user) access = await accessForUser(user.id);
+
   res.json({ success: true, config, loggedIn: Boolean(user), access: access ? { isAdmin: access.isAdmin, factions: access.factions } : null });
 });
 
@@ -596,12 +993,33 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(SITE_DIR, "index.html"));
 });
 
-app.listen(PORT, () => {
-  console.log(`SideRP running at ${BASE_URL}`);
-  if (!CLIENT_ID || !CLIENT_SECRET || !COOKIE_SECRET) {
-    console.warn("Uzupełnij .env przed użyciem logowania Discord.");
+async function startServer() {
+  try {
+    await initDatabase();
+
+    app.listen(PORT, () => {
+      console.log(`SideRP running at ${BASE_URL}`);
+
+      if (!CLIENT_ID || !CLIENT_SECRET || !COOKIE_SECRET) {
+        console.warn(
+          "Uzupełnij .env przed użyciem logowania Discord."
+        );
+      }
+
+      if (
+        CLIENT_SECRET === "NOWY_CLIENT_SECRET" ||
+        BOT_TOKEN === "NOWY_TOKEN_BOTA"
+      ) {
+        console.warn(
+          "Uwaga: w .env są jeszcze przykładowe wartości sekretów Discord."
+        );
+      }
+    });
+
+  } catch (err) {
+    console.error("❌ DATABASE ERROR:", err);
+    process.exit(1);
   }
-  if (CLIENT_SECRET === "NOWY_CLIENT_SECRET" || BOT_TOKEN === "NOWY_TOKEN_BOTA") {
-    console.warn("Uwaga: w .env są jeszcze przykładowe wartości sekretów Discord.");
-  }
-});
+}
+
+startServer();
