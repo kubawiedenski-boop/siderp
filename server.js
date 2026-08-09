@@ -25,12 +25,6 @@ app.get('/api/server/online', async (req, res) => {
   }
 });
 
-// Uszanuj sygnał rate-limit od Discorda zamiast ślepo retry'ować
-if (response.status === 429) {
-  const retryAfter = response.headers.get('retry-after');
-  // nie retry'uj od razu — zaloguj/zasygnalizuj, poczekaj
-}
-
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
 
@@ -399,6 +393,11 @@ function requireAuth(req, res, next) {
   next();
 }
 
+// Zabezpieczenie przed podwójnym użyciem tego samego kodu OAuth
+// (np. prefetch przeglądarki, boty generujące podgląd linku, podwójne
+// kliknięcie) — to najczęstsza przyczyna błędu 429 przy wymianie tokenu.
+const usedOAuthCodes = new Set();
+
 async function discordTokenExchange(code) {
   const body = new URLSearchParams({
     client_id: CLIENT_ID,
@@ -413,6 +412,11 @@ async function discordTokenExchange(code) {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body
   });
+
+  if (r.status === 429) {
+    const retryAfter = r.headers.get("retry-after");
+    console.error(`Discord token exchange rate-limited. Retry-After: ${retryAfter}`);
+  }
 
   if (!r.ok) throw new Error(`Discord token exchange failed: ${r.status}`);
   return r.json();
@@ -516,7 +520,15 @@ app.get("/auth/callback", async (req, res) => {
 
     if (!req.query.code) return res.status(400).send("Brak kodu OAuth.");
 
-    const token = await discordTokenExchange(String(req.query.code));
+    const code = String(req.query.code);
+
+    if (usedOAuthCodes.has(code)) {
+      return res.status(400).send("Ten kod logowania został już użyty.");
+    }
+    usedOAuthCodes.add(code);
+    setTimeout(() => usedOAuthCodes.delete(code), 5 * 60 * 1000);
+
+    const token = await discordTokenExchange(code);
     const dUser = await discordUser(token.access_token);
 
     const user = {
@@ -765,42 +777,6 @@ app.get("/api/reviewer/orders", requireReviewer, async (req, res) => {
 });
 
 app.patch("/api/reviewer/orders/:id", requireReviewer, async (req, res) => {
-app.delete("/api/reviewer/orders/:id", requireReviewer, async (req, res) => {
-  if (!req.access.isAdmin) {
-    return res.status(403).json({
-      success: false,
-      error: "Tylko administrator może usuwać zamówienia."
-    });
-  }
-
-  try {
-    const order = await getOrderById(req.params.id);
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        error: "Nie znaleziono zamówienia."
-      });
-    }
-
-    await pool.query(
-      "DELETE FROM orders WHERE id = $1",
-      [req.params.id]
-    );
-
-    res.json({
-      success: true,
-      deletedId: req.params.id
-    });
-  } catch (err) {
-    console.error("DELETE ORDER:", err);
-
-    res.status(500).json({
-      success: false,
-      error: "Nie udało się usunąć zamówienia."
-    });
-  }
-});
   if (!req.access.isAdmin) {
     return res.status(403).json({
       success: false,
@@ -818,9 +794,7 @@ app.delete("/api/reviewer/orders/:id", requireReviewer, async (req, res) => {
       });
     }
 
-    const status = String(
-      req.body?.status || ""
-    ).toLowerCase();
+    const status = String(req.body?.status || "").toLowerCase();
 
     if (![
       "awaiting_payment",
@@ -867,6 +841,43 @@ app.delete("/api/reviewer/orders/:id", requireReviewer, async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Nie udało się zaktualizować zamówienia."
+    });
+  }
+});
+
+app.delete("/api/reviewer/orders/:id", requireReviewer, async (req, res) => {
+  if (!req.access.isAdmin) {
+    return res.status(403).json({
+      success: false,
+      error: "Tylko administrator może usuwać zamówienia."
+    });
+  }
+
+  try {
+    const order = await getOrderById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        error: "Nie znaleziono zamówienia."
+      });
+    }
+
+    await pool.query(
+      "DELETE FROM orders WHERE id = $1",
+      [req.params.id]
+    );
+
+    res.json({
+      success: true,
+      deletedId: req.params.id
+    });
+  } catch (err) {
+    console.error("DELETE ORDER:", err);
+
+    res.status(500).json({
+      success: false,
+      error: "Nie udało się usunąć zamówienia."
     });
   }
 });
