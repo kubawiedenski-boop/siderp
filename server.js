@@ -25,6 +25,12 @@ app.get('/api/server/online', async (req, res) => {
   }
 });
 
+// Uszanuj sygnał rate-limit od Discorda zamiast ślepo retry'ować
+if (response.status === 429) {
+  const retryAfter = response.headers.get('retry-after');
+  // nie retry'uj od razu — zaloguj/zasygnalizuj, poczekaj
+}
+
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
 
