@@ -1033,6 +1033,28 @@ app.get("/api/setup-status", async (req, res) => {
   res.json({ success: true, config, loggedIn: Boolean(user), access: access ? { isAdmin: access.isAdmin, factions: access.factions } : null });
 });
 
+// TYMCZASOWY endpoint diagnostyczny — sprawdza, czy IP serwera Render
+// jest rate-limitowane przez Discorda. Usuń po zdiagnozowaniu problemu.
+app.get("/api/debug/discord-ip-test", async (req, res) => {
+  try {
+    const r = await fetch("https://discord.com/api/v10/oauth2/token", {
+      method: "HEAD"
+    });
+
+    const headers = {};
+    r.headers.forEach((value, key) => { headers[key] = value; });
+
+    res.json({
+      status: r.status,
+      statusText: r.statusText,
+      retryAfter: r.headers.get("retry-after") || null,
+      headers
+    });
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
 // Static website
 app.use(express.static(SITE_DIR, {
   extensions: ["html"],
