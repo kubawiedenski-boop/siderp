@@ -408,7 +408,21 @@ async function discordTokenExchange(code) {
     body
   });
 
-  if (!r.ok) throw new Error(`Discord token exchange failed: ${r.status}`);
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "");
+
+    console.error(
+        "DISCORD TOKEN EXCHANGE:",
+        response.status,
+        errorText,
+        "Retry-After:",
+        response.headers.get("retry-after")
+    );
+
+    throw new Error(
+        `Discord token exchange failed: ${response.status}`
+    );
+}
   return r.json();
 }
 
