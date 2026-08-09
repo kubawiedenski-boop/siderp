@@ -394,46 +394,43 @@ function requireAuth(req, res, next) {
 }
 
 async function discordTokenExchange(code) {
-  const body = new URLSearchParams({
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET,
-    grant_type: "authorization_code",
-    code,
-    redirect_uri: `${BASE_URL}/auth/callback`
-  });
+    const body = new URLSearchParams({
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: `${BASE_URL}/auth/callback`
+    });
 
-  const r = await fetch("https://discord.com/api/v10/oauth2/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body
-  });
-
-  if (!r.ok) throw new Error(`Discord token exchange failed: ${r.status}`);
-  return r.json();
-}
-
-async function discordUser(accessToken) {
-  const r = await fetch("https://discord.com/api/v10/users/@me", {
-    headers: { Authorization: `Bearer ${accessToken}` }
-  });
-  if (!r.ok) throw new Error(`Discord user request failed: ${r.status}`);
-  return r.json();
-}
-
-async function discordMember(userId) {
-  if (!GUILD_ID || !BOT_TOKEN) return null;
-  try {
     const r = await fetch(
-      `https://discord.com/api/v10/guilds/${encodeURIComponent(GUILD_ID)}/members/${encodeURIComponent(userId)}`,
-      { headers: { Authorization: `Bot ${BOT_TOKEN}` } }
+        "https://discord.com/api/v10/oauth2/token",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body
+        }
     );
-    if (!r.ok) return null;
-    return await r.json();
-  } catch {
-    return null;
-  }
-}
 
+    if (!r.ok) {
+        const errorText = await r.text().catch(() => "");
+        const retryAfter = r.headers.get("retry-after");
+
+        console.error(
+            "❌ DISCORD TOKEN EXCHANGE:",
+            r.status,
+            errorText,
+            retryAfter ? `Retry-After: ${retryAfter}` : ""
+        );
+
+        throw new Error(
+            `Discord token exchange failed: ${r.status}`
+        );
+    }
+
+    return r.json();
+}
 async function accessForUser(userId) {
   const member = await discordMember(userId);
   const roles = member && Array.isArray(member.roles) ? member.roles : [];
